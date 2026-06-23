@@ -13,17 +13,21 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+// IMPORTANTE: Importamos los iconos nativos de visibilidad de Material Design
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import com.irozumi.features.auth.presentation.register.viewmodels.RegisterViewModel
 
 @Composable
 fun RegisterScreen(
-    viewModel: RegisterViewModel, // Agregado
+    viewModel: RegisterViewModel,
     onNavigateToHome: () -> Unit,
-    onNavigateToLogin: () -> Unit // Agregado
+    onNavigateToLogin: () -> Unit
 ) {
     val state by viewModel.state.collectAsState()
 
-    // Estados locales individuales para controlar el ojito en ambos campos
+    // Estado local individual para controlar el ojito
     var passwordVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(state.isSuccess) {
@@ -39,7 +43,7 @@ fun RegisterScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(text = "Crea tu cuenta", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-        Text(text = "Únete a la comunidad de arte tradicional", fontSize = 13.sp, color = Color.Gray)
+        Text(text = "Únete a la comunidad de arte ", fontSize = 13.sp, color = Color.Gray)
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -65,7 +69,8 @@ fun RegisterScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Contraseña con Ojito
+        // Contraseña con Icono Estándar Profesional
+        // Contraseña con Icono de la imagen image_c5916e.png
         OutlinedTextField(
             value = state.password,
             onValueChange = { viewModel.onPasswordChanged(it) },
@@ -76,7 +81,11 @@ fun RegisterScreen(
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {
                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                    Text(text = if (passwordVisible) "👁️" else "🙈", fontSize = 18.sp)
+                    Icon(
+                        imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                        contentDescription = if (passwordVisible) "Ocultar contraseña" else "Mostrar contraseña",
+                        tint = Color.Gray // Le da el tono grisáceo limpio de tu ejemplo
+                    )
                 }
             }
         )

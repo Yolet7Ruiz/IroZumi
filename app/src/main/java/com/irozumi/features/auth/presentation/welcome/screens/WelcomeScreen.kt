@@ -64,7 +64,7 @@ fun WelcomeScreen(
         ) {
             Image(
                 painter = painterResource(id = android.R.drawable.ic_menu_gallery),
-                contentDescription = "Ilustración ArtBound",
+                contentDescription = "Ilustración IroZumi",
                 modifier = Modifier
                     .size(240.dp)
                     .graphicsLayer { translationY = dy },
@@ -96,7 +96,7 @@ fun WelcomeScreen(
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = "ArtBound",
+                        text = "IroZumi",
                         fontSize = 36.sp,
                         fontWeight = FontWeight.ExtraBold,
                         color = Color(0xFF3D405B)
