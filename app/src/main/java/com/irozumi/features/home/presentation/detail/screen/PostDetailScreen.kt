@@ -1,4 +1,4 @@
-package com.irozumi.features.auth.presentation.detail.screen
+package com.irozumi.features.home.presentation.detail.screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -6,7 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.* // Importa getValue y setValue automáticamente
+import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -15,15 +15,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.irozumi.features.auth.presentation.detail.viewmodel.PostDetailViewModel
+
+// CORREGIDO: Apuntando al paquete correcto de home y su subcarpeta viewmodel
+import com.irozumi.features.home.presentation.detail.viewmodel.PostDetailViewModel
+import com.irozumi.features.home.presentation.detail.viewmodel.PostDetailState
 
 @Composable
 fun PostDetailScreen(
     onBack: () -> Unit,
     viewModel: PostDetailViewModel
 ) {
-    // El delegado 'by' ahora funcionará gracias al import androidx.compose.runtime.*
-    val state by viewModel.state.collectAsState()
+    val state: PostDetailState by viewModel.state.collectAsState()
     var commentText by remember { mutableStateOf("") }
 
     Column(modifier = Modifier.fillMaxSize().background(Color.White)) {

@@ -18,9 +18,9 @@ import com.irozumi.features.auth.presentation.login.viewmodels.LoginViewModel
 
 @Composable
 fun LoginScreen(
+    viewModel: LoginViewModel, // Agregado
     onNavigateToHome: () -> Unit,
-    onNavigateToRegister: () -> Unit,
-    viewModel: LoginViewModel
+    onNavigateToRegister: () -> Unit
 ) {
     val state by viewModel.state.collectAsState()
     // Estado local indispensable para alternar el ojito

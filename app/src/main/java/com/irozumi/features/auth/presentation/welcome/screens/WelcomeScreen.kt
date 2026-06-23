@@ -28,7 +28,8 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun WelcomeScreen(
-    onNavigateToHome: () -> Unit
+    onNavigateToLogin: () -> Unit,
+    onNavigateToRegister: () -> Unit
 ) {
     var isVisible by remember { mutableStateOf(false) }
 
@@ -43,7 +44,7 @@ fun WelcomeScreen(
         targetValue = 15f,
         animationSpec = infiniteRepeatable(
             animation = tween(durationMillis = 2000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse // CORRECCIÓN: RepeatMode con R mayúscula
+            repeatMode = RepeatMode.Reverse
         ),
         label = "translateY"
     )
@@ -113,8 +114,9 @@ fun WelcomeScreen(
 
                     Spacer(modifier = Modifier.height(40.dp))
 
+                    // CORRECCIÓN AQUÍ: Usamos onNavigateToRegister o onNavigateToLogin
                     Button(
-                        onClick = onNavigateToHome,
+                        onClick = onNavigateToRegister,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),
@@ -127,6 +129,11 @@ fun WelcomeScreen(
                             fontWeight = FontWeight.Bold,
                             color = Color.White
                         )
+                    }
+
+                    // Opcional: Añadir un botón pequeño para ir al Login si ya tienen cuenta
+                    TextButton(onClick = onNavigateToLogin) {
+                        Text("Ya tengo una cuenta", color = Color(0xFF3D405B))
                     }
                 }
             }

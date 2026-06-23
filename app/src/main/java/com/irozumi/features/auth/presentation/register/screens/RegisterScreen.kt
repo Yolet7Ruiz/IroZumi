@@ -17,9 +17,9 @@ import com.irozumi.features.auth.presentation.register.viewmodels.RegisterViewMo
 
 @Composable
 fun RegisterScreen(
+    viewModel: RegisterViewModel, // Agregado
     onNavigateToHome: () -> Unit,
-    onNavigateToLogin: () -> Unit,
-    viewModel: RegisterViewModel
+    onNavigateToLogin: () -> Unit // Agregado
 ) {
     val state by viewModel.state.collectAsState()
 

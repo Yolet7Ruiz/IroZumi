@@ -5,10 +5,10 @@ import com.irozumi.features.gym.domain.model.GymExercise
 
 object GymSeedData {
     val dailyExercise = GymExercise(
-        id = 1,
+        id = "1", // CORREGIDO: id como String
         name = "Estiramiento Creativo",
         description = "Tómate 5 minutos para estirar los brazos y cerrar los ojos.",
-        durationMinutes = 5
+        isCompleted = false // Agregamos la propiedad real de tu GymExercise
     )
 
     val initialTips = listOf(
