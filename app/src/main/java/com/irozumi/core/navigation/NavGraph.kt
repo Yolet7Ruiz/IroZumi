@@ -9,6 +9,8 @@ import androidx.navigation.compose.composable
 import com.irozumi.features.auth.presentation.welcome.screens.WelcomeScreen
 import com.irozumi.features.auth.presentation.login.screens.LoginScreen
 import com.irozumi.features.auth.presentation.register.screens.RegisterScreen
+import com.irozumi.features.home.presentation.screens.HomeScreen // IMPORTACIÓN DE TU NUEVA SCREEN
+
 // Imports de ViewModels
 import com.irozumi.features.auth.presentation.login.viewmodels.LoginViewModel
 import com.irozumi.features.auth.presentation.register.viewmodels.RegisterViewModel
@@ -41,7 +43,7 @@ fun NavGraph(navController: NavHostController) {
             )
         }
 
-        // Registro - AQUÍ ESTABA EL ERROR
+        // Registro
         composable("register") {
             val registerVm: RegisterViewModel = viewModel()
             RegisterScreen(
@@ -52,12 +54,25 @@ fun NavGraph(navController: NavHostController) {
                     }
                 },
                 onNavigateToLogin = {
-                    // Solución: pasar el lambda para volver atrás o ir al login
                     navController.popBackStack()
                 }
             )
         }
 
-        // ... (resto de rutas: home, gym, post_detail)
+        // RUTA HOME INTEGRADA CON TUS NUEVOS COMPONENTES
+        composable("home") {
+            HomeScreen(
+                onNavigateToPostDetail = { postId ->
+                    navController.navigate("post_detail/$postId")
+                },
+                onNavigateToProfile = {
+                    navController.navigate("profile")
+                }
+            )
+        }
+
+        // ... (Rutas comodín para que compile si das clic en los callbacks de perfil o detalle)
+        composable("post_detail/{postId}") { /* Pantalla detalle de la obra */ }
+        composable("profile") { /* Pantalla del perfil del artista */ }
     }
 }

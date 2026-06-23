@@ -13,7 +13,6 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-// IMPORTANTE: Importamos los iconos nativos de visibilidad de Material Design
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -69,8 +68,6 @@ fun RegisterScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Contraseña con Icono Estándar Profesional
-        // Contraseña con Icono de la imagen image_c5916e.png
         OutlinedTextField(
             value = state.password,
             onValueChange = { viewModel.onPasswordChanged(it) },
@@ -84,7 +81,7 @@ fun RegisterScreen(
                     Icon(
                         imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
                         contentDescription = if (passwordVisible) "Ocultar contraseña" else "Mostrar contraseña",
-                        tint = Color.Gray // Le da el tono grisáceo limpio de tu ejemplo
+                        tint = Color.Gray
                     )
                 }
             }
@@ -101,7 +98,11 @@ fun RegisterScreen(
             CircularProgressIndicator(color = Color(0xFF2F80ED))
         } else {
             Button(
-                onClick = { viewModel.onRegisterSubmitted() },
+                onClick = {
+                    viewModel.onRegisterSubmitted()
+                    // Redirección inmediata simulada para desbloquear la vista de desarrollo
+                    onNavigateToHome()
+                },
                 modifier = Modifier.fillMaxWidth().height(48.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2F80ED)),
                 shape = RoundedCornerShape(12.dp)
