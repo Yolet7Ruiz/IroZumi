@@ -5,13 +5,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-// Imports de pantallas
 import com.irozumi.features.auth.presentation.welcome.screens.WelcomeScreen
 import com.irozumi.features.auth.presentation.login.screens.LoginScreen
 import com.irozumi.features.auth.presentation.register.screens.RegisterScreen
-import com.irozumi.features.home.presentation.screens.HomeScreen // IMPORTACIÓN DE TU NUEVA SCREEN
+import com.irozumi.features.home.presentation.screens.HomeScreen
 
-// Imports de ViewModels
 import com.irozumi.features.auth.presentation.login.viewmodels.LoginViewModel
 import com.irozumi.features.auth.presentation.register.viewmodels.RegisterViewModel
 
@@ -59,11 +57,11 @@ fun NavGraph(navController: NavHostController) {
             )
         }
 
-        // RUTA HOME INTEGRADA CON TUS NUEVOS COMPONENTES
+        // RUTA HOME ACTUALIZADA: Se remueve 'onNavigateToSearch' ya que el buscador ahora es interno
         composable("home") {
             HomeScreen(
-                onNavigateToPostDetail = { postId ->
-                    navController.navigate("post_detail/$postId")
+                onNavigateToCart = {
+                    navController.navigate("cart")
                 },
                 onNavigateToProfile = {
                     navController.navigate("profile")
@@ -71,8 +69,8 @@ fun NavGraph(navController: NavHostController) {
             )
         }
 
-        // ... (Rutas comodín para que compile si das clic en los callbacks de perfil o detalle)
-        composable("post_detail/{postId}") { /* Pantalla detalle de la obra */ }
+        // Rutas comodín añadidas para dar soporte a la navegación y evitar fallos de compilación
+        composable("cart") { /* Pantalla del carrito de compras */ }
         composable("profile") { /* Pantalla del perfil del artista */ }
     }
 }

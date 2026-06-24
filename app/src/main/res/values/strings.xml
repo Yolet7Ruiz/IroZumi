@@ -1,3 +1,36 @@
 <resources>
     <string name="app_name">IroZumi</string>
+
+    <!-- Navigation & Tabs -->
+    <string name="tab_home">Inicio</string>
+    <string name="tab_messages">Mensajes</string>
+    <string name="tab_dynamics">Dinámicas</string>
+    <string name="tab_gym">Gimnasio</string>
+    <string name="tab_notifications">Alertas</string>
+    <string name="drawer_profile">Perfil</string>
+
+    <!-- Search Screen -->
+    <string name="search_placeholder">Buscar obras, estilos, etiquetas...</string>
+    <string name="trending_categories">Categorías Tendencia</string>
+    <string name="search_results">Resultados para \"%1$s\"</string>
+    <string name="search_no_match">No se encontraron resultados.</string>
+
+    <!-- Feed & Actions -->
+    <string name="explore_placeholder">Explora nuevas técnicas y publica tu proceso...</string>
+    <string name="upload_title">Subir Obra de Arte</string>
+    <string name="dialog_post_details">Detalles de la publicación</string>
+    <string name="dialog_edit_title">Editar Detalles de la Obra</string>
+    <string name="dialog_comment_label">Escribe un comentario...</string>
+    <string name="dialog_category_label">Selecciona una Categoría:</string>
+    <string name="dialog_update_desc">Actualizar descripción</string>
+    <string name="comments_title">Comentarios (%1$d)</string>
+    <string name="comment_reply_placeholder">Escribe una respuesta...</string>
+
+    <!-- Buttons & Common -->
+    <string name="btn_share">Compartir</string>
+    <string name="btn_cancel">Cancelar</string>
+    <string name="btn_save">Guardar</string>
+    <string name="camera">Cámara</string>
+    <string name="gallery">Galería</string>
+    <string name="under_development">En desarrollo</string>
 </resources>

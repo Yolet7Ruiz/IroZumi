@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.irozumi"
+    namespace = "com.irozumi"
     compileSdk {
         version = release(36) {
             minorApiLevel = 1
@@ -12,7 +12,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.irozumi"
+        applicationId = "com.irozumi"
         minSdk = 26
         targetSdk = 36
         versionCode = 1
@@ -57,6 +57,7 @@ dependencies {
     implementation("io.ktor:ktor-client-android:3.0.0")
     implementation("io.ktor:ktor-client-content-negotiation:3.0.0")
     implementation("io.ktor:ktor-serialization-kotlinx-json:3.0.0")
+    implementation("io.coil-kt:coil-compose:2.6.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

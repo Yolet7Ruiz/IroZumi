@@ -1,17 +1,16 @@
 package com.irozumi.features.home.presentation.components
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Brush
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material.icons.filled.ShoppingBag
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,11 +23,17 @@ import com.irozumi.features.home.domain.model.ArtworkPost
 
 @Composable
 fun ArtworkCard(
-    post: ArtworkPost,
+    post: ArtworkPost,             // Corregido: Tipo explícito correcto sin asignaciones raras
     brandBlue: Color,
     textDark: Color,
-    onCommentsClick: () -> Unit
+    onLikeToggle: () -> Unit,
+    onCommentsClick: () -> Unit,
+    onShareClick: () -> Unit,
+    onDeleteClick: () -> Unit,     // Parámetro para eliminar funcional
+    onEditClick: (String) -> Unit  // Parámetro para editar funcional
 ) {
+    var showMenu by remember { mutableStateOf(false) }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -48,8 +53,33 @@ fun ArtworkCard(
                     Text(text = post.author, fontWeight = FontWeight.Bold, color = textDark, fontSize = 15.sp)
                     Text(text = post.category, color = brandBlue, fontSize = 12.sp, fontWeight = FontWeight.Medium)
                 }
-                IconButton(onClick = { /* Opciones */ }) {
-                    Icon(Icons.Default.MoreHoriz, contentDescription = "Opciones", tint = Color.Gray)
+
+                // Mostrar el menú desplegable SOLO si la publicación pertenece al usuario actual
+                if (post.author.contains("You", ignoreCase = true) || post.author.contains("Tú", ignoreCase = true)) {
+                    Box {
+                        IconButton(onClick = { showMenu = true }) {
+                            Icon(Icons.Default.MoreHoriz, contentDescription = "More options", tint = Color.Gray)
+                        }
+                        DropdownMenu(
+                            expanded = showMenu,
+                            onDismissRequest = { showMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Editar Publicación") },
+                                onClick = {
+                                    showMenu = false
+                                    onEditClick(post.description)
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Eliminar", color = Color.Red) },
+                                onClick = {
+                                    showMenu = false
+                                    onDeleteClick()
+                                }
+                            )
+                        }
+                    }
                 }
             }
 
@@ -61,55 +91,66 @@ fun ArtworkCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            // Contenedor de la imagen alternativo (Evita usar Coil si no está instalado)
+            val hasImage = !post.imageUrl.isNullOrBlank()
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(240.dp)
                     .clip(RoundedCornerShape(14.dp))
-                    .background(Color(0xFFEFEFEF)),
+                    .background(if (hasImage) brandBlue.copy(alpha = 0.1f) else Color(0xFFEFEFEF)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Default.Palette, contentDescription = null, modifier = Modifier.size(48.dp), tint = Color.Gray)
+                if (hasImage) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(Icons.Default.Palette, contentDescription = null, modifier = Modifier.size(48.dp), tint = brandBlue)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("Imagen cargada exitosamente", fontSize = 12.sp, color = brandBlue, fontWeight = FontWeight.Medium)
+                    }
+                } else {
+                    Icon(Icons.Default.Palette, contentDescription = null, modifier = Modifier.size(48.dp), tint = Color.Gray)
+                }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = "${if (post.isLikedByUser) "❤️" else "🖤"} ${post.likesCount} me gusta", fontSize = 12.sp, color = Color.Gray)
-                Text(text = "💬 ${post.comments} comentarios", fontSize = 12.sp, color = Color.Gray)
-            }
-
-            HorizontalDivider(modifier = Modifier.padding(vertical = 10.dp), color = Color(0xFFF5F5F5))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Button(
-                    onClick = { /* Comisiones */ },
-                    modifier = Modifier.weight(1f).height(40.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = brandBlue),
-                    shape = RoundedCornerShape(10.dp),
-                    contentPadding = PaddingValues(0.dp)
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable { onLikeToggle() }
+                        .padding(4.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(Icons.Default.ShoppingBag, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("Comisiones", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                    Text(text = if (post.likesCount > 0) "❤️" else "🖤", fontSize = 16.sp)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(text = "${post.likesCount} likes", fontSize = 12.sp, color = Color.Gray, fontWeight = FontWeight.Medium)
                 }
 
-                OutlinedButton(
-                    onClick = { /* Pedir similar */ },
-                    modifier = Modifier.weight(1f).height(40.dp),
-                    border = BorderStroke(1.dp, brandBlue.copy(alpha = 0.6f)),
-                    shape = RoundedCornerShape(10.dp),
-                    contentPadding = PaddingValues(0.dp)
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable { onCommentsClick() }
+                        .padding(4.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(Icons.Default.Brush, contentDescription = null, modifier = Modifier.size(16.dp), tint = brandBlue)
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("Pedir similar", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = brandBlue)
+                    Text(text = "💬 ${post.comments} comentarios", fontSize = 12.sp, color = Color.Gray, fontWeight = FontWeight.Medium)
+                }
+
+                IconButton(
+                    onClick = onShareClick,
+                    modifier = Modifier.size(28.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Share,
+                        contentDescription = "Share",
+                        tint = Color.Gray,
+                        modifier = Modifier.size(18.dp)
+                    )
                 }
             }
         }
