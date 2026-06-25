@@ -17,7 +17,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState // 👈 ¡ESTA ES LA LÍNEA QUE FALTA!
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -35,9 +35,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.irozumi.R
 import com.irozumi.features.home.domain.model.ArtworkPost
 import com.irozumi.features.home.presentation.components.ArtworkCard
+import com.irozumi.features.gym.presentation.screens.GymScreen
+import com.irozumi.features.gym.di.GymViewModelFactory
+import com.irozumi.features.gym.presentation.viewmodel.GymViewModel
+import com.irozumi.features.challenges.presentation.screens.ChallengesScreen // 💡 IMPORTACIÓN DE DINÁMICAS
+import com.irozumi.features.challenges.presentation.viewmodel.ChallengesViewModel // 💡 IMPORTACIÓN DE DINÁMICAS
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -77,7 +83,7 @@ fun HomeScreen(
         if (bitmap != null) showFormDialog = true
     }
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-        if (isGranted) cameraLauncher.launch(null)
+        if (isGranted) { cameraLauncher.launch(null) }
     }
 
     val feedState = remember {
@@ -100,7 +106,10 @@ fun HomeScreen(
                         icon = { Icon(Icons.Default.AccountCircle, contentDescription = null) },
                         label = { Text(stringResource(R.string.drawer_profile)) },
                         selected = false,
-                        onClick = { scope.launch { drawerState.close() }; onNavigateToProfile() },
+                        onClick = {
+                            scope.launch { drawerState.close() }
+                            onNavigateToProfile()
+                        },
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
                     )
                 }
@@ -161,74 +170,82 @@ fun HomeScreen(
         ) { innerPadding ->
             Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
 
-                if (selectedTab == 0) {
-                    Column {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 14.dp, vertical = 10.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            categories.forEach { category ->
-                                val isSelected = selectedCategory == category
-                                FilterChip(
-                                    selected = isSelected,
-                                    onClick = { selectedCategory = category },
-                                    label = { Text(category) },
-                                    colors = FilterChipDefaults.filterChipColors(selectedContainerColor = brandBlue, selectedLabelColor = Color.White),
-                                    shape = RoundedCornerShape(20.dp)
-                                )
-                            }
-                        }
-
-                        LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            item {
-                                Card(
-                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp).clickable { showUploadBottomSheet = true },
-                                    shape = RoundedCornerShape(16.dp),
-                                    colors = CardDefaults.cardColors(containerColor = Color.White)
-                                ) {
-                                    Row(modifier = Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-                                        Box(modifier = Modifier.size(40.dp).background(brandBlue.copy(alpha = 0.1f), CircleShape), contentAlignment = Alignment.Center) {
-                                            Icon(Icons.Default.Add, contentDescription = null, tint = brandBlue)
-                                        }
-                                        Spacer(modifier = Modifier.width(12.dp))
-                                        Text(stringResource(R.string.explore_placeholder), color = Color.Gray, fontSize = 14.sp)
-                                    }
+                when (selectedTab) {
+                    0 -> {
+                        Column {
+                            Row(
+                                modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 14.dp, vertical = 10.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                categories.forEach { category ->
+                                    val isSelected = selectedCategory == category
+                                    FilterChip(
+                                        selected = isSelected,
+                                        onClick = { selectedCategory = category },
+                                        label = { Text(category) },
+                                        colors = FilterChipDefaults.filterChipColors(selectedContainerColor = brandBlue, selectedLabelColor = Color.White),
+                                        shape = RoundedCornerShape(20.dp)
+                                    )
                                 }
                             }
 
-                            val filteredPosts = feedState.filter { selectedCategory == "Todos" || it.category == selectedCategory }
-                            items(filteredPosts) { post ->
-                                ArtworkCard(
-                                    post = post,
-                                    brandBlue = brandBlue,
-                                    textDark = textDark,
-                                    onLikeToggle = {
-                                        val index = feedState.indexOfFirst { it.id == post.id }
-                                        if (index != -1) feedState[index] = feedState[index].copy(likesCount = feedState[index].likesCount + 1)
-                                    },
-                                    onCommentsClick = { activePostForComments = post },
-                                    onShareClick = {
-                                        val sendIntent = Intent().apply {
-                                            action = Intent.ACTION_SEND
-                                            putExtra(Intent.EXTRA_TEXT, "Check out this art by ${post.author}: '${post.title}'")
-                                            type = "text/plain"
+                            LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                item {
+                                    Card(
+                                        modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp).clickable { showUploadBottomSheet = true },
+                                        shape = RoundedCornerShape(16.dp),
+                                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                                    ) {
+                                        Row(modifier = Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                                            Box(modifier = Modifier.size(40.dp).background(brandBlue.copy(alpha = 0.1f), CircleShape), contentAlignment = Alignment.Center) {
+                                                Icon(Icons.Default.Add, contentDescription = null, tint = brandBlue)
+                                            }
+                                            Spacer(modifier = Modifier.width(12.dp))
+                                            Text(stringResource(R.string.explore_placeholder), color = Color.Gray, fontSize = 14.sp)
                                         }
-                                        context.startActivity(Intent.createChooser(sendIntent, "Share via:"))
-                                    },
-                                    onDeleteClick = {
-                                        feedState.remove(post)
-                                    },
-                                    onEditClick = { currentDescription ->
-                                        postBeingEdited = post
-                                        editDescriptionText = currentDescription
                                     }
-                                )
+                                }
+
+                                val filteredPosts = feedState.filter { selectedCategory == "Todos" || it.category == selectedCategory }
+                                items(filteredPosts) { post ->
+                                    ArtworkCard(
+                                        post = post, brandBlue = brandBlue, textDark = textDark,
+                                        onLikeToggle = {
+                                            val index = feedState.indexOfFirst { it.id == post.id }
+                                            if (index != -1) feedState[index] = feedState[index].copy(likesCount = feedState[index].likesCount + 1)
+                                        },
+                                        onCommentsClick = { activePostForComments = post },
+                                        onShareClick = {
+                                            val sendIntent = Intent().apply {
+                                                action = Intent.ACTION_SEND
+                                                putExtra(Intent.EXTRA_TEXT, "Check out this art by ${post.author}: '${post.title}'")
+                                                type = "text/plain"
+                                            }
+                                            context.startActivity(Intent.createChooser(sendIntent, "Share via:"))
+                                        },
+                                        onDeleteClick = { feedState.remove(post) },
+                                        onEditClick = { currentDescription ->
+                                            postBeingEdited = post
+                                            editDescriptionText = currentDescription
+                                        }
+                                    )
+                                }
                             }
                         }
                     }
-                } else {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(stringResource(R.string.under_development), color = Color.Gray)
+                    2 -> {
+                        // 💡 CORREGIDO: Inyección e inicialización impecable de tu pantalla de dinámicas
+                        val challengesViewModel: ChallengesViewModel = viewModel()
+                        ChallengesScreen(viewModel = challengesViewModel)
+                    }
+                    3 -> {
+                        val gymViewModel: GymViewModel = viewModel(factory = GymViewModelFactory())
+                        GymScreen(viewModel = gymViewModel)
+                    }
+                    else -> {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text(stringResource(R.string.under_development), color = Color.Gray)
+                        }
                     }
                 }
 
@@ -251,10 +268,8 @@ fun HomeScreen(
                                     }
                                 },
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = brandBlue,
-                                    unfocusedBorderColor = Color(0xFFE0E0E0),
-                                    focusedContainerColor = Color(0xFFF8F9FA),
-                                    unfocusedContainerColor = Color(0xFFF8F9FA)
+                                    focusedBorderColor = brandBlue, unfocusedBorderColor = Color(0xFFE0E0E0),
+                                    focusedContainerColor = Color(0xFFF8F9FA), unfocusedContainerColor = Color(0xFFF8F9FA)
                                 ),
                                 singleLine = true
                             )
@@ -263,11 +278,7 @@ fun HomeScreen(
                         Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
                             if (searchQuery.isEmpty()) {
                                 Text(stringResource(R.string.trending_categories), fontWeight = FontWeight.Bold, color = textDark, fontSize = 16.sp, modifier = Modifier.padding(bottom = 12.dp))
-                                LazyVerticalGrid(
-                                    columns = GridCells.Fixed(2),
-                                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                                ) {
+                                LazyVerticalGrid(columns = GridCells.Fixed(2), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                                     items(listOf("Arte Anime", "Acuarelas", "Gore y Oscuro", "Realismo 3D", "Concepto Digital", "Bocetos")) { tag ->
                                         Box(modifier = Modifier.fillMaxWidth().height(70.dp).clip(RoundedCornerShape(14.dp)).background(brandBlue.copy(alpha = 0.08f)).clickable { searchQuery = tag.split(" ")[0] }.padding(14.dp), contentAlignment = Alignment.CenterStart) {
                                             Text(tag, fontWeight = FontWeight.SemiBold, color = brandBlue, fontSize = 14.sp)
@@ -289,8 +300,7 @@ fun HomeScreen(
                                                 onLikeToggle = {}, onCommentsClick = { activePostForComments = post }, onShareClick = {},
                                                 onDeleteClick = { feedState.remove(post) },
                                                 onEditClick = { currentDescription ->
-                                                    postBeingEdited = post
-                                                    editDescriptionText = currentDescription
+                                                    postBeingEdited = post; editDescriptionText = currentDescription
                                                 }
                                             )
                                         }
@@ -301,7 +311,7 @@ fun HomeScreen(
                     }
                 }
 
-                // DIÁLOGOS Y BOTTOM SHEETS
+                // BOTTOM SHEETS & DIALOGS
                 if (showUploadBottomSheet) {
                     ModalBottomSheet(onDismissRequest = { showUploadBottomSheet = false }) {
                         Column(modifier = Modifier.fillMaxWidth().padding(24.dp).padding(bottom = 16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -357,29 +367,20 @@ fun HomeScreen(
                         title = { Text(stringResource(R.string.dialog_edit_title), fontWeight = FontWeight.Bold) },
                         text = {
                             Column {
-                                OutlinedTextField(
-                                    value = editDescriptionText,
-                                    onValueChange = { editDescriptionText = it },
-                                    label = { Text(stringResource(R.string.dialog_update_desc)) },
-                                    modifier = Modifier.fillMaxWidth()
-                                )
+                                OutlinedTextField(value = editDescriptionText, onValueChange = { editDescriptionText = it }, label = { Text(stringResource(R.string.dialog_update_desc)) }, modifier = Modifier.fillMaxWidth())
                             }
                         },
                         confirmButton = {
                             Button(
                                 onClick = {
                                     val index = feedState.indexOfFirst { it.id == post.id }
-                                    if (index != -1) {
-                                        feedState[index] = feedState[index].copy(description = editDescriptionText)
-                                    }
+                                    if (index != -1) feedState[index] = feedState[index].copy(description = editDescriptionText)
                                     postBeingEdited = null
                                 },
                                 colors = ButtonDefaults.buttonColors(containerColor = brandBlue)
                             ) { Text(stringResource(R.string.btn_save), color = Color.White) }
                         },
-                        dismissButton = {
-                            TextButton(onClick = { postBeingEdited = null }) { Text(stringResource(R.string.btn_cancel)) }
-                        }
+                        dismissButton = { TextButton(onClick = { postBeingEdited = null }) { Text(stringResource(R.string.btn_cancel)) } }
                     )
                 }
 
@@ -415,12 +416,9 @@ fun HomeScreen(
                                         placeholder = { Text(stringResource(R.string.comment_reply_placeholder), fontSize = 14.sp, color = Color.Gray) },
                                         modifier = Modifier.weight(1f), shape = RoundedCornerShape(24.dp),
                                         colors = OutlinedTextFieldDefaults.colors(
-                                            focusedBorderColor = brandBlue,
-                                            unfocusedBorderColor = Color.DarkGray,
-                                            focusedTextColor = Color.White,
-                                            unfocusedTextColor = Color.White,
-                                            focusedContainerColor = Color(0xFF151722),
-                                            unfocusedContainerColor = Color(0xFF151722)
+                                            focusedBorderColor = brandBlue, unfocusedBorderColor = Color.DarkGray,
+                                            focusedTextColor = Color.White, unfocusedTextColor = Color.White,
+                                            focusedContainerColor = Color(0xFF151722), unfocusedContainerColor = Color(0xFF151722)
                                         )
                                     )
                                     Spacer(modifier = Modifier.width(10.dp))
@@ -440,7 +438,6 @@ fun HomeScreen(
                         }
                     }
                 }
-
             }
         }
     }
