@@ -1,68 +1,97 @@
 package com.irozumi.features.challenges.presentation.viewmodel
 
 import android.net.Uri
-import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
-import com.irozumi.features.challenges.data.datasource.ChallengesSeedData
-import com.irozumi.features.challenges.domain.model.Challenge
-import com.irozumi.features.challenges.domain.model.ChallengeWinner
-import com.irozumi.features.challenges.domain.model.MaterialTip
+import androidx.lifecycle.viewModelScope
+import com.irozumi.features.challenges.presentation.screens.ChallengesUiState
+import com.irozumi.features.challenges.domain.model.CustomChallenge
+import com.irozumi.features.challenges.domain.model.ParticipantArtwork
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 class ChallengesViewModel : ViewModel() {
 
-    private val _challengesList = MutableStateFlow<List<Challenge>>(emptyList())
-    val challengesList: StateFlow<List<Challenge>> = _challengesList.asStateFlow()
+    private val _uiState = MutableStateFlow<ChallengesUiState>(
+        ChallengesUiState.Success(
+            systemChallenges = emptyList(), // Aquí cargarías tus retos base
+            communityChallenges = emptyList(),
+            participantArtworks = emptyList(),
+            pastWinners = emptyList()
+        )
+    )
+    val uiState: StateFlow<ChallengesUiState> = _uiState.asStateFlow()
 
-    private val _winnersList = MutableStateFlow<List<ChallengeWinner>>(emptyList())
-    val winnersList: StateFlow<List<ChallengeWinner>> = _winnersList.asStateFlow()
-
-    // Manejo reactivo de la lista de materiales económicos compartidos
-    private val _materialTips = mutableStateListOf<MaterialTip>().apply {
-        addAll(ChallengesSeedData.initialMaterialTips)
-    }
-    val materialTipsList: List<MaterialTip> get() = _materialTips
-
-    init {
-        loadChallengesData()
-    }
-
-    private fun loadChallengesData() {
-        // Inicialmente jalamos de los datos semilla fijos de tus vistas
-        _challengesList.value = ChallengesSeedData.initialChallenges
-        _winnersList.value = ChallengesSeedData.lastWeekWinners
-    }
-
-    // 💡 Función para cuando el usuario presiona "Sube tu dibujo" en una dinámica ACTIVA
-    fun uploadDrawingToChallenge(challengeId: Int, imageUri: Uri) {
-        _challengesList.value = _challengesList.value.map { challenge ->
-            if (challenge.id == challengeId) {
-                challenge.copy(
-                    participantsCount = challenge.participantsCount + 1,
-                    isUserParticipating = true
+    // 💡 Envío de entrega de un participante al reto seleccionado
+    fun submitArtwork(challengeId: String, title: String, category: String, imageUri: Uri?) {
+        viewModelScope.launch {
+            val currentState = _uiState.value
+            if (currentState is ChallengesUiState.Success) {
+                val newArtwork = ParticipantArtwork(
+                    id = System.currentTimeMillis().toString(),
+                    username = "@UsuarioLogueado",
+                    title = title,
+                    category = category,
+                    imageUri = imageUri,
+                    votes = 0
                 )
-            } else {
-                challenge
+                _uiState.update {
+                    currentState.copy(
+                        participantArtworks = currentState.participantArtworks + newArtwork
+                    )
+                }
             }
         }
-        // Aquí se disparará la notificación de guardado exitoso en el futuro
     }
 
-    // 💡 Nueva función interactiva: Permite a los usuarios añadir un tip de materiales calidad-precio
-    fun publishMaterialTip(name: String, category: String, price: String, review: String) {
-        if (name.isNotBlank() && review.isNotBlank()) {
-            val newTip = MaterialTip(
-                id = _materialTips.size + 1,
-                materialName = name,
-                category = category,
-                approximatePrice = price,
-                reviewDescription = review,
-                authorUsername = "Tú (Artista)",
-                ratingStars = 5
-            )
-            _materialTips.add(0, newTip) // Aparece inmediatamente arriba en el feed
+    // 💡 Gestión de votaciones persistente por ID de entrega
+    fun updateVote(artworkId: String, isVoted: Boolean) {
+        viewModelScope.launch {
+            val currentState = _uiState.value
+            if (currentState is ChallengesUiState.Success) {
+                val updatedArtworks = currentState.participantArtworks.map { artwork ->
+                    if (artwork.id == artworkId) {
+                        val newVotes = if (isVoted) artwork.votes + 1 else artwork.votes - 1
+                        artwork.copy(votes = newVotes)
+                    } else {
+                        artwork
+                    }
+                }
+                _uiState.update { currentState.copy(participantArtworks = updatedArtworks) }
+            }
+        }
+    }
+
+    // 💡 Publicación de una nueva dinámica creada por un miembro de la comunidad
+    fun createNewChallenge(
+        title: String,
+        description: String,
+        date: String,
+        time: String,
+        votingDays: String,
+        imageUri: Uri?
+    ) {
+        viewModelScope.launch {
+            val currentState = _uiState.value
+            if (currentState is ChallengesUiState.Success) {
+                val days = votingDays.toIntOrNull() ?: 3
+                val newChallenge = CustomChallenge(
+                    id = System.currentTimeMillis().toString(),
+                    title = title,
+                    description = description,
+                    startDate = date,
+                    startTime = time,
+                    votingDays = days,
+                    referenceImageUri = imageUri
+                )
+                _uiState.update {
+                    currentState.copy(
+                        communityChallenges = currentState.communityChallenges + newChallenge
+                    )
+                }
+            }
         }
     }
 }

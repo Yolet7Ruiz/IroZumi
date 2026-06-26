@@ -36,19 +36,25 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import com.irozumi.R
 import com.irozumi.features.home.domain.model.ArtworkPost
 import com.irozumi.features.home.presentation.components.ArtworkCard
 import com.irozumi.features.gym.presentation.screens.GymScreen
 import com.irozumi.features.gym.di.GymViewModelFactory
 import com.irozumi.features.gym.presentation.viewmodel.GymViewModel
-import com.irozumi.features.challenges.presentation.screens.ChallengesScreen // 💡 IMPORTACIÓN DE DINÁMICAS
-import com.irozumi.features.challenges.presentation.viewmodel.ChallengesViewModel // 💡 IMPORTACIÓN DE DINÁMICAS
+
+import com.irozumi.features.challenges.presentation.screens.ChallengesScreen
+import com.irozumi.features.challenges.presentation.viewmodel.ChallengesViewModel
+import com.irozumi.features.notifications.presentation.screens.NotificationsScreen
+import com.irozumi.features.notifications.presentation.viewmodel.NotificationsViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
+@Suppress("SpellCheckingInspection")
 @Composable
 fun HomeScreen(
+    navController: NavHostController,
     onNavigateToCart: () -> Unit,
     onNavigateToProfile: () -> Unit
 ) {
@@ -57,7 +63,7 @@ fun HomeScreen(
     val context = LocalContext.current
 
     var selectedCategory by remember { mutableStateOf("Todos") }
-    var selectedTab by remember { mutableIntStateOf(0) }
+    var selectedTab by remember { mutableStateOf(0) }
     var isSearching by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
 
@@ -133,34 +139,39 @@ fun HomeScreen(
                 )
             },
             bottomBar = {
-                NavigationBar(containerColor = Color.White) {
+                NavigationBar(
+                    containerColor = Color.White,
+                    tonalElevation = 8.dp,
+                    windowInsets = WindowInsets(0, 0, 0, 0),
+                    modifier = Modifier.height(54.dp)
+                ) {
                     NavigationBarItem(
-                        icon = { Icon(Icons.Default.Home, contentDescription = null) },
-                        label = { Text(stringResource(R.string.tab_home), fontSize = 11.sp) },
+                        icon = { Icon(Icons.Default.Home, contentDescription = null, modifier = Modifier.size(22.dp)) },
+                        label = { Text(stringResource(R.string.tab_home), fontSize = 10.sp) },
                         selected = selectedTab == 0 && !isSearching,
                         onClick = { selectedTab = 0; isSearching = false }
                     )
                     NavigationBarItem(
-                        icon = { Icon(Icons.Default.Mail, contentDescription = null) },
-                        label = { Text(stringResource(R.string.tab_messages), fontSize = 11.sp) },
+                        icon = { Icon(Icons.Default.Email, contentDescription = null, modifier = Modifier.size(22.dp)) },
+                        label = { Text(stringResource(R.string.tab_messages), fontSize = 10.sp) },
                         selected = selectedTab == 1,
                         onClick = { selectedTab = 1 }
                     )
                     NavigationBarItem(
-                        icon = { Icon(Icons.Default.Star, contentDescription = null) },
-                        label = { Text(stringResource(R.string.tab_dynamics), fontSize = 11.sp) },
+                        icon = { Icon(Icons.Default.Star, contentDescription = null, modifier = Modifier.size(22.dp)) },
+                        label = { Text(stringResource(R.string.tab_dynamics), fontSize = 10.sp) },
                         selected = selectedTab == 2,
                         onClick = { selectedTab = 2 }
                     )
                     NavigationBarItem(
-                        icon = { Icon(Icons.Default.FitnessCenter, contentDescription = null) },
-                        label = { Text(stringResource(R.string.tab_gym), fontSize = 11.sp) },
+                        icon = { Icon(Icons.Default.FitnessCenter, contentDescription = null, modifier = Modifier.size(22.dp)) },
+                        label = { Text(stringResource(R.string.tab_gym), fontSize = 10.sp) },
                         selected = selectedTab == 3,
                         onClick = { selectedTab = 3 }
                     )
                     NavigationBarItem(
-                        icon = { Icon(Icons.Default.Notifications, contentDescription = null) },
-                        label = { Text(stringResource(R.string.tab_notifications), fontSize = 11.sp) },
+                        icon = { Icon(Icons.Default.Notifications, contentDescription = null, modifier = Modifier.size(22.dp)) },
+                        label = { Text(stringResource(R.string.tab_notifications), fontSize = 10.sp) },
                         selected = selectedTab == 4,
                         onClick = { selectedTab = 4 }
                     )
@@ -234,13 +245,30 @@ fun HomeScreen(
                         }
                     }
                     2 -> {
-                        // 💡 CORREGIDO: Inyección e inicialización impecable de tu pantalla de dinámicas
                         val challengesViewModel: ChallengesViewModel = viewModel()
-                        ChallengesScreen(viewModel = challengesViewModel)
+                        ChallengesScreen(
+                            viewModel = challengesViewModel,
+                            navController = navController
+                        )
                     }
                     3 -> {
                         val gymViewModel: GymViewModel = viewModel(factory = GymViewModelFactory())
                         GymScreen(viewModel = gymViewModel)
+                    }
+                    4 -> {
+                        val notificationsViewModel: NotificationsViewModel = viewModel()
+                        // 💡 INTEGRADO: Pasamos la acción al pulsar la barrita de notificación para redirigir
+                        NotificationsScreen(
+                            viewModel = notificationsViewModel,
+                            onNavigateToSource = { tipoOrigen ->
+                                when (tipoOrigen) {
+                                    "feed" -> { selectedTab = 0; isSearching = false }
+                                    "messages" -> { selectedTab = 1 }
+                                    "dynamics" -> { selectedTab = 2 }
+                                    "gym" -> { selectedTab = 3 }
+                                }
+                            }
+                        )
                     }
                     else -> {
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

@@ -1,69 +1,65 @@
 package com.irozumi.features.challenges.data.datasource
 
-import com.irozumi.features.challenges.domain.model.*
-import java.util.Calendar
-import java.util.Date
+import com.irozumi.features.challenges.domain.model.ChallengeDynamic
+import com.irozumi.features.challenges.domain.model.ChallengeStage
+import com.irozumi.features.challenges.domain.model.ChallengeWinner
+import com.irozumi.features.challenges.domain.model.GalleryParticipant
 
-object ChallengesSeedData {
+object ChallengesSeeData {
 
-    val initialChallenges = listOf(
-        Challenge(
-            id = 1,
-            title = "Jueves de reto",
-            concept = "Luz y sombra",
-            description = "Aprende a dominar los contrastes fuertes usando solo lápiz 2B o grafito puro.",
-            status = ChallengeStatus.PROXIMO,
-            endDate = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, 3) }.time,
-            participantsCount = 18
-        ),
-        Challenge(
-            id = 2,
-            title = "Martes de boceto",
-            concept = "Manos en movimiento",
-            description = "Captura la anatomía de las manos en posturas dinámicas de menos de 2 minutos.",
-            status = ChallengeStatus.CERRADO,
-            endDate = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -1) }.time,
-            participantsCount = 54
-        ),
-        Challenge(
-            id = 3,
-            title = "Sábado de estilo libre",
-            concept = "Creatividad pura",
-            description = "Sin tema fijo. Sube tu mejor trazo de la semana para que la comunidad vote.",
-            status = ChallengeStatus.ACTIVO,
-            endDate = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, 2) }.time,
-            participantsCount = 110,
-            isUserParticipating = true
+    fun getMockDynamics(): List<ChallengeDynamic> {
+        return listOf(
+            ChallengeDynamic(
+                id = 1,
+                title = "Jueves de reto",
+                iconEmoji = "🏆",
+                theme = "Tema: 'Luz y sombra'",
+                description = "Al finalizar se actualiza • 18 registros. Dinámica de contrastes para niveles avanzados y principiantes.",
+                referenceImageUrl = null,
+                stage = ChallengeStage.UPCOMING,
+                timingStatusText = "Próximo reto",
+                participantCount = 18
+            ),
+            ChallengeDynamic(
+                id = 2,
+                title = "Martes de boceto",
+                iconEmoji = "✍️",
+                theme = "Tema: 'Manos en movimiento'",
+                description = "Dibuja extremidades simulando dinamismo. Ideal como práctica base diaria.",
+                referenceImageUrl = "https://example.com/ref_manos.png",
+                stage = ChallengeStage.VOTING,
+                timingStatusText = "Fase de Votación • 3 días restantes",
+                participantCount = 24
+            ),
+            ChallengeDynamic(
+                id = 3,
+                title = "Sábado de estilo libre",
+                iconEmoji = "⚡",
+                theme = "Sin tema fijo, creatividad pura",
+                description = "Sube tu mejor ilustración libre. Tienes tiempo límite antes de pasar a la fase de votación de la comunidad.",
+                referenceImageUrl = "https://example.com/ref_libre.png",
+                stage = ChallengeStage.ACTIVE_UPLOAD,
+                timingStatusText = "Quedan 2 días • 18 participantes",
+                participantCount = 18,
+                isUserParticipating = true
+            )
         )
-    )
+    }
 
-    val lastWeekWinners = listOf(
-        ChallengeWinner("u1", "@Macrudi", "", 120, "Anime", 1, android.R.drawable.star_on),
-        ChallengeWinner("u2", "@LeoArt", "", 110, "Realismo", 2, android.R.drawable.star_on),
-        ChallengeWinner("u3", "@Artferxu", "", 105, "Dibujo técnico", 3, android.R.drawable.star_on)
-    )
-
-    // Datos semilla para tu nueva sección de Materiales Buenos y Baratos
-    val initialMaterialTips = listOf(
-        MaterialTip(
-            id = 1,
-            materialName = "Bitácora de dibujo Canson XL Mixed Media",
-            category = "Papel",
-            approximatePrice = "Económico",
-            reviewDescription = "Soporta acuarela ligera, marcadores y grafito sin traspasar la hoja. Es perfecta para estudiantes por su bajo costo y grosor.",
-            authorUsername = "@ArteMaster99",
-            ratingStars = 5,
-            likesCount = 42
-        ),
-        MaterialTip(
-            id = 2,
-            materialName = "Lápices de colores Prismacolor Junior",
-            category = "Color",
-            approximatePrice = "Muy Accesible",
-            reviewDescription = "Tienen una mina bastante suave que permite hacer degradados muy decentes sin gastar lo que cuestan los Premier.",
-            authorUsername = "@MarinaD",
-            ratingStars = 4,
-            likesCount = 29
+    fun getMockWinners(): List<ChallengeWinner> {
+        return listOf(
+            ChallengeWinner(1, 1, "@MarinaD", "Categoría Anime", 120, "🥇", null),
+            ChallengeWinner(2, 2, "@LuisArt", "Categoría Realismo", 100, "🥈", null),
+            ChallengeWinner(3, 3, "@AnaVega", "Categoría Dibujos animados", 95, "🥉", null)
         )
-    )
+    }
+
+    fun getMockParticipants(): List<GalleryParticipant> {
+        return listOf(
+            GalleryParticipant(1, "@MarinaD", "Anime", ""),
+            GalleryParticipant(2, "@Nek0_Art", "Anime", ""),
+            GalleryParticipant(3, "@GokuDraw", "Anime", ""),
+            GalleryParticipant(4, "@the_real_art", "Anime", "")
+        )
+    }
 }

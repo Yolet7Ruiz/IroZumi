@@ -17,7 +17,7 @@ import com.irozumi.features.home.presentation.screens.HomeScreen
 fun NavGraph(navController: NavHostController) {
     NavHost(
         navController = navController,
-        startDestination = "welcome" // 💡 CORREGIDO: Ahora la app inicia correctamente en la Bienvenida
+        startDestination = "welcome"
     ) {
         // 1. Pantalla de Bienvenida (Entrada de la App)
         composable("welcome") {
@@ -34,7 +34,6 @@ fun NavGraph(navController: NavHostController) {
                 viewModel = loginViewModel,
                 onNavigateToRegister = { navController.navigate("register") },
                 onNavigateToHome = {
-                    // Viaja al home y limpia el stack para que no pueda regresar al login sin desloguearse
                     navController.navigate("home") {
                         popUpTo("welcome") { inclusive = true }
                     }
@@ -49,7 +48,6 @@ fun NavGraph(navController: NavHostController) {
                 viewModel = registerViewModel,
                 onNavigateToLogin = { navController.navigate("login") },
                 onNavigateToHome = {
-                    // Viaja al home y limpia el stack de manera segura
                     navController.navigate("home") {
                         popUpTo("welcome") { inclusive = true }
                     }
@@ -57,10 +55,11 @@ fun NavGraph(navController: NavHostController) {
             )
         }
 
-        // 4. Pantalla Principal de la Aplicación (Donde están tus pestañas y retos)
+        // 4. Pantalla Principal de la Aplicación (Maneja sus propias pestañas internas)
         composable("home") {
             HomeScreen(
-                onNavigateToCart = { /* Navegar al carrito */ },
+                navController = navController, // 💡 CORREGIDO: Inyectamos el controlador directamente
+                onNavigateToCart = { /* Navegar al carrito si tienes pantalla */ },
                 onNavigateToProfile = { /* Navegar al perfil */ }
             )
         }
