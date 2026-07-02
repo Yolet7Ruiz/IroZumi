@@ -22,7 +22,15 @@ class RegisterViewModel : ViewModel() {
         _state.update { it.copy(password = newValue) }
     }
 
+    fun onArtisticLevelChanged(newValue: String) {
+        _state.update { it.copy(artisticLevel = newValue) }
+    }
+
+    fun onTermsAcceptedChanged(newValue: Boolean) {
+        _state.update { it.copy(acceptedTerms = newValue) }
+    }
+
     fun onRegisterSubmitted() {
-        // Tu lógica de registro aquí
+        // Tu lógica de registro aquí usando state.value.artisticLevel y state.value.acceptedTerms
     }
 }

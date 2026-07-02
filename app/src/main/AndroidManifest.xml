@@ -2,17 +2,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- 🟢 AQUÍ AGREGAMOS LOS PERMISOS PARA LA CÁMARA Y LA GALERÍA -->
-    <!-- Permiso para usar la cámara física del celular -->
     <uses-permission android:name="android.permission.CAMERA" />
 
-    <!-- Le avisa al sistema que usaremos la cámara pero no es obligatoria para instalar la app -->
     <uses-feature android:name="android.hardware.camera" android:required="false" />
 
-    <!-- Permisos para leer imágenes de la galería (Para Android 13 o superior) -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
 
-    <!-- Permiso de respaldo para la galería en celulares con Android antiguo (12 o inferior) -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
 
     <application
@@ -29,15 +24,14 @@
             android:name="com.irozumi.MainActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:theme="@style/Theme.IroZumi">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+            android:theme="@style/Theme.IroZumi"
+            android:windowSoftInputMode="adjustResize"> <intent-filter>
+            <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent-filter>
         </activity>
 
-        <!-- 🟢 PROVIDER DE ARCHIVOS (Evita que la app crashee al compartir fotos entre la cámara y tu app) -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
