@@ -38,8 +38,9 @@ fun MessagesScreen(
 
     val currentChatPartnerName = remember(state) {
         if (state is MessagesUiState.Success) {
-            val user = state.users.find { it["id"] == state.selectedUserId }
-            (user?.get("name") as? String) ?: "Chat"
+            val user = state.users.find { it.id == state.selectedUserId }
+            (user?.name) ?: "Chat"
+
         } else {
             "Chat"
         }
@@ -153,9 +154,9 @@ fun MessagesScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     reverseLayout = true
                 ) {
-                    items(state.currentChatMessages.reversed()) { messageMap ->
-                        val text = messageMap["text"] as? String ?: ""
-                        val isMine = messageMap["isMine"] as? Boolean ?: false
+                    items(state.currentChatMessages.reversed()) { message ->
+                        val text = message.text
+                        val isMine = message.isMine
 
                         Box(
                             modifier = Modifier.fillMaxWidth(),

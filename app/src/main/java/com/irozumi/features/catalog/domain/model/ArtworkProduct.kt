@@ -6,9 +6,10 @@ data class ArtworkProduct(
     val id: String,
     val title: String,
     val artistName: String,
+    val artistId: String = "",
     val price: Double,
     val rating: Double,
-    val imageUri: Uri? = null,
+    val imageUrl: String? = null,
     val category: String,
     val isFavorite: Boolean = false
 )

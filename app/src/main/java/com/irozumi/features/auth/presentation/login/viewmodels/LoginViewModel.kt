@@ -18,27 +18,35 @@ class LoginViewModel(
     val state: StateFlow<LoginState> = _state.asStateFlow()
 
     fun onEmailChanged(newValue: String) {
-        _state.update { it.copy(email = newValue) }
+        _state.update { it.copy(email = newValue, errorMessage = null) }
     }
 
     fun onPasswordChanged(newValue: String) {
-        _state.update { it.copy(password = newValue) }
+        _state.update { it.copy(password = newValue, errorMessage = null) }
     }
 
     fun onLoginSubmitted() {
         val currentEmail = _state.value.email
         val currentPassword = _state.value.password
 
+        android.util.Log.e("IroZumi", "🔐 Login: $currentEmail")
+
         _state.update { it.copy(isLoading = true, errorMessage = null) }
 
         viewModelScope.launch {
-            repository.login(currentEmail, currentPassword)
-                .onSuccess {
+            try {
+                val result = repository.login(currentEmail, currentPassword)
+                android.util.Log.e("IroZumi", "✅ Result: $result")
+                result.onSuccess {
                     _state.update { it.copy(isLoading = false, isSuccess = true) }
                 }
-                .onFailure { exception ->
-                    _state.update { it.copy(isLoading = false, errorMessage = exception.message ?: "Error desconocido") }
+                result.onFailure { exception ->
+                    android.util.Log.e("IroZumi", "❌ ${exception.message}")
+                    _state.update { it.copy(isLoading = false, errorMessage = exception.message ?: "Error") }
                 }
+            } catch (e: Exception) {
+                android.util.Log.e("IroZumi", "💥 ${e.message}")
+            }
         }
     }
 }

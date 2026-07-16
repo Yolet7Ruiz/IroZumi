@@ -19,6 +19,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import com.irozumi.features.auth.presentation.register.viewmodels.RegisterViewModel
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.text.style.TextOverflow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,18 +33,20 @@ fun RegisterScreen(
 
     var passwordVisible by remember { mutableStateOf(false) }
     var expandedDropdown by remember { mutableStateOf(false) }
+    var showTermsDialog by remember { mutableStateOf(false) }
     val levels = listOf("Principiante", "Intermedio", "Profesional")
 
     LaunchedEffect(state.isSuccess) {
         if (state.isSuccess) onNavigateToHome()
     }
 
+    val brandBlue = Color(0xFF2F80ED)
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFFEFAF6))
             .padding(24.dp)
-            // Añadido por si el teclado o pantallas chicas requieren scroll
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -52,31 +56,40 @@ fun RegisterScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // --- CAMPO: NOMBRE ARTÍSTICO ---
         OutlinedTextField(
             value = state.username,
             onValueChange = { viewModel.onUsernameChanged(it) },
             label = { Text("Nombre artístico") },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
-            singleLine = true
+            singleLine = true,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = brandBlue,
+                focusedLabelColor = brandBlue,
+                focusedTextColor = Color.Black,
+                unfocusedTextColor = Color.Black
+            )
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // --- CAMPO: CORREO ELECTRÓNICO ---
         OutlinedTextField(
             value = state.email,
             onValueChange = { viewModel.onEmailChanged(it) },
             label = { Text("Correo electrónico") },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
-            singleLine = true
+            singleLine = true,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = brandBlue,
+                focusedLabelColor = brandBlue,
+                focusedTextColor = Color.Black,
+                unfocusedTextColor = Color.Black
+            )
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // --- CAMPO: CONTRASEÑA ---
         OutlinedTextField(
             value = state.password,
             onValueChange = { viewModel.onPasswordChanged(it) },
@@ -85,6 +98,12 @@ fun RegisterScreen(
             shape = RoundedCornerShape(12.dp),
             singleLine = true,
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = brandBlue,
+                focusedLabelColor = brandBlue,
+                focusedTextColor = Color.Black,
+                unfocusedTextColor = Color.Black
+            ),
             trailingIcon = {
                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
                     Icon(
@@ -98,7 +117,6 @@ fun RegisterScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // --- NUEVO CAMPO: DESPLEGABLE DE NIVEL ARTÍSTICO ---
         ExposedDropdownMenuBox(
             expanded = expandedDropdown,
             onExpandedChange = { expandedDropdown = !expandedDropdown },
@@ -107,14 +125,19 @@ fun RegisterScreen(
             OutlinedTextField(
                 value = state.artisticLevel,
                 onValueChange = {},
-                readOnly = true, // Evita que abran el teclado al tocarlo
+                readOnly = true,
                 label = { Text("Nivel artístico") },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedDropdown) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .menuAnchor(MenuAnchorType.PrimaryNotEditable, true),
                 shape = RoundedCornerShape(12.dp),
-                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = brandBlue,
+                    focusedLabelColor = brandBlue,
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black
+                )
             )
             ExposedDropdownMenu(
                 expanded = expandedDropdown,
@@ -123,7 +146,7 @@ fun RegisterScreen(
             ) {
                 levels.forEach { level ->
                     DropdownMenuItem(
-                        text = { Text(text = level) },
+                        text = { Text(text = level, color = Color.Black) },
                         onClick = {
                             viewModel.onArtisticLevelChanged(level)
                             expandedDropdown = false
@@ -136,7 +159,6 @@ fun RegisterScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // --- NUEVA CASILLA: TÉRMINOS Y CONDICIONES ---
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -152,7 +174,10 @@ fun RegisterScreen(
             Text(
                 text = "Acepto los términos y condiciones de uso.",
                 fontSize = 13.sp,
-                color = Color.DarkGray
+                color = Color.DarkGray,
+                modifier = Modifier.clickable { showTermsDialog = true },
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
             )
         }
 
@@ -163,16 +188,13 @@ fun RegisterScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // --- BOTÓN DE REGISTRO ---
         if (state.isLoading) {
             CircularProgressIndicator(color = Color(0xFF2F80ED))
         } else {
             Button(
                 onClick = {
                     viewModel.onRegisterSubmitted()
-                    onNavigateToHome()
                 },
-                // El botón se deshabilita si no se han aceptado los términos
                 enabled = state.acceptedTerms,
                 modifier = Modifier.fillMaxWidth().height(48.dp),
                 colors = ButtonDefaults.buttonColors(
@@ -190,5 +212,27 @@ fun RegisterScreen(
                 Text("¿Ya tienes una cuenta? Inicia sesión", color = Color(0xFF2F80ED))
             }
         }
+    }
+
+    if (showTermsDialog) {
+        AlertDialog(
+            onDismissRequest = { showTermsDialog = false },
+            title = { Text("Términos y Condiciones", fontWeight = FontWeight.Bold) },
+            text = {
+                Text(
+                    "Al usar IroZumi aceptas:\n\n" +
+                            "🎨 Respetar a otros artistas\n" +
+                            "🚫 No publicar contenido ofensivo\n" +
+                            "🔒 Tus datos son tuyos, no los vendemos\n" +
+                            "❌ Puedes cerrar tu cuenta cuando quieras",
+                    fontSize = 14.sp
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { showTermsDialog = false }) {
+                    Text("Entendido", color = Color(0xFF2F80ED))
+                }
+            }
+        )
     }
 }

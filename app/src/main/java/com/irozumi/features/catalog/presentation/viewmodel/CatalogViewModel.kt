@@ -3,6 +3,7 @@ package com.irozumi.features.catalog.presentation.viewmodel
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.irozumi.features.catalog.data.datasource.CatalogRemoteDataSource
 import com.irozumi.features.catalog.domain.model.ArtworkProduct
 import com.irozumi.features.catalog.presentation.screens.CatalogUiState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,59 +14,58 @@ import kotlinx.coroutines.launch
 
 class CatalogViewModel : ViewModel() {
 
+    private val dataSource = CatalogRemoteDataSource()
     private val _uiState = MutableStateFlow<CatalogUiState>(CatalogUiState.Loading)
     val uiState: StateFlow<CatalogUiState> = _uiState.asStateFlow()
 
     init {
-        cargarProductosIniciales()
+        loadCatalog()
     }
 
-    private fun cargarProductosIniciales() {
-        // Datos de ejemplo idénticos a los de tu imagen de referencia
-        val listaDemo = listOf(
-            ArtworkProduct("1", "Atardecer Sereno", "@BandaRomantica24", 800.0, 4.9, null, "Acrílico"),
-            ArtworkProduct("2", "Explosión de Color", "@ArteVivo", 950.0, 4.7, null, "Anime"),
-            ArtworkProduct("3", "Mirada Urbana", "@PincelMX", 680.0, 4.5, null, "Realismo"),
-            ArtworkProduct("4", "Bosque en Acuarela", "@AcuarelaArt", 1200.0, 5.0, null, "Realismo")
-        )
-        _uiState.value = CatalogUiState.Success(products = listaDemo, selectedCategory = "Todos")
-    }
-
-    fun cambiarCategoria(nuevaCategoria: String) {
-        val estadoActual = _uiState.value
-        if (estadoActual is CatalogUiState.Success) {
-            _uiState.update { estadoActual.copy(selectedCategory = nuevaCategoria) }
-        }
-    }
-
-    // Publicación de una obra para la venta desde el formulario de la app
-    fun subirObraParaVenta(titulo: String, precio: Double, categoria: String, imagen: Uri?) {
+    fun loadCatalog(category: String? = null) {
         viewModelScope.launch {
-            val estadoActual = _uiState.value
-            if (estadoActual is CatalogUiState.Success) {
-                val nuevaObra = ArtworkProduct(
-                    id = System.currentTimeMillis().toString(),
-                    title = titulo,
-                    artistName = "@MiUsuarioArtista",
-                    price = precio,
-                    rating = 5.0,
-                    imageUri = imagen,
-                    category = categoria
-                )
-                _uiState.update {
-                    estadoActual.copy(products = listOf(nuevaObra) + estadoActual.products)
+            try {
+                val remote = dataSource.getCatalog(category)
+                val products = remote.map {
+                    ArtworkProduct(
+                        id = it.id, title = it.title, artistName = it.artistName,
+                        price = it.price, rating = it.rating, imageUrl = it.imageUrl ?: "",
+                        category = it.category, artistId = it.artistId
+                    )
                 }
+                _uiState.value = CatalogUiState.Success(
+                    products = products,
+                    selectedCategory = category ?: "Todos"
+                )
+            } catch (e: Exception) {
+                _uiState.value = CatalogUiState.Error("Error al cargar catálogo")
             }
         }
     }
 
-    fun toggleFavorito(productoId: String) {
-        val estadoActual = _uiState.value
-        if (estadoActual is CatalogUiState.Success) {
-            val listaActualizada = estadoActual.products.map {
-                if (it.id == productoId) it.copy(isFavorite = !it.isFavorite) else it
+    fun cambiarCategoria(category: String) {
+        loadCatalog(category)
+    }
+
+    fun toggleFavorito(productId: String) {
+        val state = _uiState.value
+        if (state is CatalogUiState.Success) {
+            val updated =
+                state.products.map { if (it.id == productId) it.copy(isFavorite = !it.isFavorite) else it }
+            _uiState.value = state.copy(products = updated)
+        }
+    }
+
+    fun subirObraParaVenta(titulo: String, precio: Double, categoria: String, imageBase64: String) {
+        android.util.Log.e("IroZumi", "Subiendo obra: $titulo")
+        viewModelScope.launch {
+            try {
+                dataSource.createProduct(titulo, precio, categoria, imageBase64)
+                android.util.Log.e("IroZumi", "Obra publicada")
+                loadCatalog()
+            } catch (e: Exception) {
+                android.util.Log.e("IroZumi", "Error: ${e.message}")
             }
-            _uiState.update { estadoActual.copy(products = listaActualizada) }
         }
     }
 }

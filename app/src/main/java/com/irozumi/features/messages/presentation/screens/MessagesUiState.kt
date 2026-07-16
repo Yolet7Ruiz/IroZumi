@@ -1,12 +1,13 @@
 package com.irozumi.features.messages.presentation.screens
 
-// Usamos mapas o estructuras nativas para simular la información de tus capturas
+import com.irozumi.features.messages.domain.model.ChatMessage
+import com.irozumi.features.messages.domain.model.MessageUser
+
 sealed interface MessagesUiState {
     object Loading : MessagesUiState
-
     data class Success(
-        val users: List<Map<String, Any>>,
+        val users: List<MessageUser> = emptyList(),
         val selectedUserId: String? = null,
-        val currentChatMessages: List<Map<String, Any>> = emptyList()
+        val currentChatMessages: List<ChatMessage> = emptyList()
     ) : MessagesUiState
 }

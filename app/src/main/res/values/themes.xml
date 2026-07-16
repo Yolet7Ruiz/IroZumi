@@ -1,5 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- 1. Tema de arranque (Sistema) -->
+    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">#FEFAF6</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/mi_logo</item>
+        <item name="postSplashScreenTheme">@style/Theme.IroZumi</item>
+    </style>
 
-    <style name="Theme.IroZumi" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- 2. Tema principal (App) -->
+    <style name="Theme.IroZumi" parent="android:Theme.Material.Light.NoActionBar">
+        <!-- Esto es lo que quita el flash blanco: el fondo de la ventana es crema -->
+        <item name="android:windowBackground">#FEFAF6</item>
+        <item name="android:statusBarColor">#FEFAF6</item>
+        <item name="android:navigationBarColor">#FEFAF6</item>
+    </style>
 </resources>

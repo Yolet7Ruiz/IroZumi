@@ -1,7 +1,7 @@
 package com.irozumi.features.home.domain.model
 
 data class ArtworkPost(
-    val id: Int,                    // Cambiado de String a Int
+    val id: String,                    // Cambiado de String a Int
     val title: String,
     val author: String,             // Renombrado para que coincida con tu ViewModel
     val imageUrl: String?,          // Para el valor null que envías en el constructor

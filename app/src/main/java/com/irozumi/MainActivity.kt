@@ -2,7 +2,6 @@ package com.irozumi
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
@@ -10,14 +9,24 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.compose.rememberNavController
 import com.irozumi.core.navigation.NavGraph
+import com.irozumi.core.security.TokenManager
 import com.irozumi.core.ui.theme.IroZumiTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        // 1. Splash del sistema (statico)
+        installSplashScreen()
+
         super.onCreate(savedInstanceState)
+        
+        // Inicializar carga de datos
+        TokenManager.init(this)
+
         enableEdgeToEdge()
+
         setContent {
             IroZumiTheme {
                 val navController = rememberNavController()
@@ -29,6 +38,7 @@ class MainActivity : ComponentActivity() {
                             .fillMaxSize()
                             .padding(innerPadding)
                     ) {
+                        // 2. NavGraph inicia en "splash" (Logo + Puntitos)
                         NavGraph(navController = navController)
                     }
                 }

@@ -1,5 +1,6 @@
 package com.irozumi.features.auth.presentation.welcome.screens
 
+import android.content.Context
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
@@ -16,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -30,12 +32,13 @@ fun WelcomeScreen(
     onNavigateToRegister: () -> Unit
 ) {
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     val pages = listOf(
         OnboardingPage("Muestra tu arte", "Comparte tus pinturas tradicionales con una comunidad que valora el arte real, sin filtros ni algoritmos tóxicos."),
         OnboardingPage("Comunidad sana", "Aquí los principiantes reciben apoyo y motivación. Las críticas constructivas suman, las destructivas no tienen lugar."),
         OnboardingPage("Aprende de los mejores", "Conecta con pintores dispuestos a enseñar sus técnicas y estilos. Clases personalizadas al alcance de tu mano."),
-        OnboardingPage("Vive de tu arte", "Vende obras originales, acepta encargos personalizados con significado emocional, y conecta con compradores que valoran lo hecho a mano."),
+        OnboardingPage("Vive de tu arte", "Vende obras originales, acepta encargos personalizados con significado emocional, y conecta con compradores que valoren lo hecho a mano."),
         OnboardingPage("IroZumi", "Tu pulso, tu estilo, tu espacio.", isFinalPage = true)
     )
 
@@ -185,6 +188,9 @@ fun WelcomeScreen(
                         ) {
                             TextButton(
                                 onClick = {
+                                    // Guardar que ya vio el Welcome
+                                    context.getSharedPreferences("irozumi_prefs", Context.MODE_PRIVATE)
+                                        .edit().putBoolean("onboarding_completed", true).apply()
                                     scope.launch { pagerState.scrollToPage(pages.size - 1) }
                                 }
                             ) {
@@ -209,7 +215,12 @@ fun WelcomeScreen(
                             verticalArrangement = Arrangement.Center
                         ) {
                             Button(
-                                onClick = onNavigateToLogin,
+                                onClick = {
+                                    // Guardar que ya vio el Welcome
+                                    context.getSharedPreferences("irozumi_prefs", Context.MODE_PRIVATE)
+                                        .edit().putBoolean("onboarding_completed", true).apply()
+                                    onNavigateToLogin()
+                                },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(56.dp),
@@ -226,7 +237,12 @@ fun WelcomeScreen(
 
                             Spacer(modifier = Modifier.height(8.dp))
 
-                            TextButton(onClick = onNavigateToRegister) {
+                            TextButton(onClick = {
+                                // Guardar que ya vio el Welcome
+                                context.getSharedPreferences("irozumi_prefs", Context.MODE_PRIVATE)
+                                    .edit().putBoolean("onboarding_completed", true).apply()
+                                onNavigateToRegister()
+                            }) {
                                 Text("¿Eres nuevo? Crea una cuenta aquí", color = textDark, fontSize = 14.sp)
                             }
                         }

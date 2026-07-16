@@ -31,6 +31,12 @@ import androidx.core.content.FileProvider
 import androidx.navigation.NavHostController
 import com.irozumi.features.catalog.presentation.viewmodel.CatalogViewModel
 import java.io.File
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.draw.clip
+import androidx.compose.material3.MenuAnchorType
+import androidx.compose.ui.window.Dialog
+import androidx.compose.foundation.clickable
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,6 +59,9 @@ fun CatalogScreen(
     var categoriaObra by remember { mutableStateOf("Acrílico") }
     var imagenSeleccionadaUri by remember { mutableStateOf<Uri?>(null) }
     var fotoTmpUri by remember { mutableStateOf<Uri?>(null) }
+    var mensajeConfirmacion by remember { mutableStateOf("") }
+    var expandedCategoria by remember { mutableStateOf(false) }
+    var fullScreenImage by remember { mutableStateOf<String?>(null) }
 
     fun generarUriTemporal(): Uri {
         val directorio = File(context.cacheDir, "catalog_fotos").apply { mkdirs() }
@@ -95,12 +104,15 @@ fun CatalogScreen(
 
             when (val estado = state) {
                 is CatalogUiState.Loading -> {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = brandBlue)
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = brandBlue)
+                    }
                 }
+
                 is CatalogUiState.Success -> {
                     Column(modifier = Modifier.fillMaxSize()) {
 
-                        // Barra horizontal de categorías (Filtros del catálogo)
+                        // Barra horizontal de categorías
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -148,56 +160,42 @@ fun CatalogScreen(
                                             modifier = Modifier
                                                 .fillMaxWidth()
                                                 .height(140.dp)
-                                                .background(Color(0xFFEFEFEF)),
+                                                .background(Color(0xFFEFEFEF))
+                                                .clickable { fullScreenImage = obra.imageUrl },
                                             contentAlignment = Alignment.Center
                                         ) {
-                                            Icon(
-                                                imageVector = Icons.Default.Brush,
-                                                contentDescription = null,
-                                                tint = Color.Gray,
-                                                modifier = Modifier.size(40.dp)
-                                            )
-
-                                            // Badge de Puntuación (Estrellas)
-                                            Box(
-                                                modifier = Modifier
-                                                    .align(Alignment.TopStart)
-                                                    .padding(8.dp)
-                                                    .background(Color.White.copy(alpha = 0.9f), RoundedCornerShape(12.dp))
-                                                    .padding(horizontal = 6.dp, vertical = 2.dp)
-                                            ) {
-                                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                                    Icon(Icons.Default.Star, contentDescription = null, tint = Color(0xFFF2994A), modifier = Modifier.size(12.dp))
-                                                    Spacer(modifier = Modifier.width(2.dp))
-                                                    Text(obra.rating.toString(), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = textDark)
-                                                }
-                                            }
-
-                                            // Corazón de Favoritos
-                                            IconButton(
-                                                onClick = { viewModel.toggleFavorito(obra.id) },
-                                                modifier = Modifier
-                                                    .align(Alignment.TopEnd)
-                                                    .padding(4.dp)
-                                                    .background(Color.White.copy(alpha = 0.9f), CircleShape)
-                                                    .size(30.dp)
-                                            ) {
+                                            if (obra.imageUrl?.isNotEmpty() == true) {
+                                                AsyncImage(
+                                                    model = obra.imageUrl,
+                                                    contentDescription = obra.title,
+                                                    modifier = Modifier.fillMaxSize(),
+                                                    contentScale = ContentScale.Crop
+                                                )
+                                            } else {
                                                 Icon(
-                                                    imageVector = if (obra.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                                    imageVector = Icons.Default.Brush,
                                                     contentDescription = null,
-                                                    tint = if (obra.isFavorite) Color.Red else Color.Gray,
-                                                    modifier = Modifier.size(16.dp)
+                                                    tint = Color.Gray,
+                                                    modifier = Modifier.size(40.dp)
                                                 )
                                             }
                                         }
 
-                                        // Detalles inferiores de la tarjeta comercial
+                                        // Detalles inferiores de la tarjeta
                                         Column(modifier = Modifier.padding(12.dp)) {
-                                            Text(text = obra.title, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = textDark, maxLines = 1)
-                                            Text(text = obra.artistName, fontSize = 11.sp, color = Color.Gray)
-
+                                            Text(
+                                                text = obra.title,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 14.sp,
+                                                color = textDark,
+                                                maxLines = 1
+                                            )
+                                            Text(
+                                                text = obra.artistName,
+                                                fontSize = 11.sp,
+                                                color = Color.Gray
+                                            )
                                             Spacer(modifier = Modifier.height(8.dp))
-
                                             Row(
                                                 modifier = Modifier.fillMaxWidth(),
                                                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -209,17 +207,11 @@ fun CatalogScreen(
                                                     fontSize = 16.sp,
                                                     color = textDark
                                                 )
-
-                                                // 💬 BOTÓN (+): Abre directamente tu pantalla de mensajes compartida
                                                 IconButton(
-                                                    onClick = {
-                                                        navController.navigate("messages_screen")
-                                                    },
-                                                    modifier = Modifier
-                                                        .size(32.dp)
-                                                        .background(Color.Black, CircleShape)
+                                                    onClick = { navController.navigate("messages_screen/${obra.artistId}") },
+                                                    modifier = Modifier.size(32.dp).background(Color.Black, CircleShape)
                                                 ) {
-                                                    Icon(Icons.Default.Add, contentDescription = "Contactar creador", tint = Color.White, modifier = Modifier.size(18.dp))
+                                                    Icon(Icons.Default.Add, null, tint = Color.White, modifier = Modifier.size(18.dp))
                                                 }
                                             }
                                         }
@@ -229,12 +221,15 @@ fun CatalogScreen(
                         }
                     }
                 }
+
                 is CatalogUiState.Error -> {
-                    Text(estado.message, modifier = Modifier.align(Alignment.Center), color = Color.Red)
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(estado.message, color = Color.Red)
+                    }
                 }
             }
 
-            // Diálogo Modal para Promocionar una Nueva Obra
+            // Diálogo Modal para Venta
             if (mostrarFormularioVenta) {
                 AlertDialog(
                     onDismissRequest = { mostrarFormularioVenta = false },
@@ -242,52 +237,114 @@ fun CatalogScreen(
                     title = { Text("Promocionar obra para venta", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = textDark) },
                     text = {
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
-                            OutlinedTextField(value = tituloObra, onValueChange = { tituloObra = it }, label = { Text("Título de la pieza") }, modifier = Modifier.fillMaxWidth())
+                            OutlinedTextField(
+                                value = tituloObra,
+                                onValueChange = { tituloObra = it },
+                                label = { Text("Título de la pieza") },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            ExposedDropdownMenuBox(
+                                expanded = expandedCategoria,
+                                onExpandedChange = { expandedCategoria = !expandedCategoria },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                OutlinedTextField(
+                                    value = categoriaObra,
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    label = { Text("Categoría") },
+                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedCategoria) },
+                                    modifier = Modifier.fillMaxWidth().menuAnchor(MenuAnchorType.PrimaryNotEditable, true),
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                                ExposedDropdownMenu(expanded = expandedCategoria, onDismissRequest = { expandedCategoria = false }) {
+                                    listOf("Acrílico", "Anime", "Realismo", "Acuarela").forEach { cat ->
+                                        DropdownMenuItem(text = { Text(cat) }, onClick = { categoriaObra = cat; expandedCategoria = false })
+                                    }
+                                }
+                            }
                             OutlinedTextField(
                                 value = precioObra,
                                 onValueChange = { precioObra = it },
                                 label = { Text("Precio estimado ($)") },
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp)
                             )
-
-                            Text("Fotografía de la pieza:", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Button(
-                                    onClick = { val uri = generarUriTemporal(); fotoTmpUri = uri; launcherCamara.launch(uri) },
-                                    modifier = Modifier.weight(1f),
-                                    colors = ButtonDefaults.buttonColors(containerColor = brandBlue.copy(alpha = 0.1f), contentColor = brandBlue)
-                                ) { Text("Cámara", fontSize = 12.sp) }
-                                Button(
-                                    onClick = { launcherGaleria.launch("image/*") },
-                                    modifier = Modifier.weight(1f),
-                                    colors = ButtonDefaults.buttonColors(containerColor = brandBlue.copy(alpha = 0.1f), contentColor = brandBlue)
-                                ) { Text("Galería", fontSize = 12.sp) }
+                                Button(onClick = { val uri = generarUriTemporal(); fotoTmpUri = uri; launcherCamara.launch(uri) }, modifier = Modifier.weight(1f)) { Text("Cámara", fontSize = 12.sp) }
+                                Button(onClick = { launcherGaleria.launch("image/*") }, modifier = Modifier.weight(1f)) { Text("Galería", fontSize = 12.sp) }
                             }
                             if (imagenSeleccionadaUri != null) {
-                                Text("✓ Archivo multimedia adjuntado con éxito", color = Color(0xFF27AE60), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                AsyncImage(model = imagenSeleccionadaUri, contentDescription = "Vista previa", modifier = Modifier.fillMaxWidth().height(120.dp).clip(RoundedCornerShape(8.dp)), contentScale = ContentScale.Crop)
                             }
                         }
                     },
                     confirmButton = {
                         Button(
                             onClick = {
-                                val precioParseado = precioObra.toDoubleOrNull() ?: 0.0
-                                if (tituloObra.isNotEmpty() && precioParseado > 0.0) {
-                                    viewModel.subirObraParaVenta(tituloObra, precioParseado, categoriaObra, imagenSeleccionadaUri)
-                                    mostrarFormularioVenta = false
-                                    tituloObra = ""; precioObra = ""; imagenSeleccionadaUri = null
+                                val p = precioObra.toDoubleOrNull() ?: 0.0
+                                if (tituloObra.isBlank() || p <= 0.0 || imagenSeleccionadaUri == null) {
+                                    mensajeConfirmacion = "Todos los campos son obligatorios"
+                                    return@Button
                                 }
+                                val base64 = imagenSeleccionadaUri?.let {
+                                    val inputStream = context.contentResolver.openInputStream(it)
+                                    val bitmap = android.graphics.BitmapFactory.decodeStream(inputStream)
+                                    val maxSize = 1024
+                                    val width = bitmap.width
+                                    val height = bitmap.height
+                                    val scale = if (width > height) maxSize.toFloat() / width else maxSize.toFloat() / height
+                                    val newWidth = (width * scale).toInt()
+                                    val newHeight = (height * scale).toInt()
+                                    val resized = android.graphics.Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true)
+                                    val outputStream = java.io.ByteArrayOutputStream()
+                                    resized.compress(android.graphics.Bitmap.CompressFormat.JPEG, 70, outputStream)
+                                    android.util.Base64.encodeToString(outputStream.toByteArray(), android.util.Base64.NO_WRAP)
+                                } ?: ""
+                                viewModel.subirObraParaVenta(tituloObra, p, categoriaObra, base64)
+                                mostrarFormularioVenta = false
+                                tituloObra = ""; precioObra = ""; imagenSeleccionadaUri = null
+                                mensajeConfirmacion = "Obra publicada exitosamente"
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = brandBlue)
                         ) { Text("Publicar", color = Color.White) }
                     },
                     dismissButton = {
-                        TextButton(onClick = { mostrarFormularioVenta = false; tituloObra = ""; precioObra = ""; imagenSeleccionadaUri = null }) {
-                            Text("Cancelar", color = Color.Red)
-                        }
+                    TextButton(onClick = { mostrarFormularioVenta = false }) { Text("Cancelar", color = Color.Red) }
+
                     }
                 )
+            }
+        }
+
+        if (mensajeConfirmacion.isNotEmpty()) {
+            AlertDialog(
+                onDismissRequest = { mensajeConfirmacion = "" },
+                confirmButton = { Button(onClick = { mensajeConfirmacion = "" }) { Text("OK") } },
+                title = { Text("Estado") },
+                text = { Text(mensajeConfirmacion) }
+            )
+        }
+
+        // 🆕 Imagen a pantalla completa (Premium Fix)
+        fullScreenImage?.let { imageUrl ->
+            Dialog(
+                onDismissRequest = { fullScreenImage = null },
+                properties = DialogProperties(usePlatformDefaultWidth = false)
+            ) {
+                Box(
+                    modifier = Modifier.fillMaxSize().background(Color.Black).clickable { fullScreenImage = null },
+                    contentAlignment = Alignment.Center
+                ) {
+                    AsyncImage(
+                        model = imageUrl,
+                        contentDescription = "Imagen ampliada",
+                        modifier = Modifier.fillMaxWidth(),
+                        contentScale = ContentScale.Fit
+                    )
+                }
             }
         }
     }

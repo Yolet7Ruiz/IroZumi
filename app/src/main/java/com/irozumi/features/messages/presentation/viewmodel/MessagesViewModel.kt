@@ -1,48 +1,101 @@
 package com.irozumi.features.messages.presentation.viewmodel
 
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.irozumi.features.messages.data.dataSource.MessagesRemoteDataSource
+import com.irozumi.features.messages.domain.model.ChatMessage
+import com.irozumi.features.messages.domain.model.MessageUser
 import com.irozumi.features.messages.presentation.screens.MessagesUiState
+import kotlinx.coroutines.launch
+import java.util.Date
+import com.irozumi.core.security.TokenManager
 
 class MessagesViewModel : ViewModel() {
 
-    private val mockUsers: List<Map<String, Any>> = listOf(
-        mapOf("id" to "1", "name" to "María González", "role" to "Product Designer · Equipo UX", "email" to "maria@empresa.com", "status" to "Activo", "isOnline" to true),
-        mapOf("id" to "2", "name" to "Carlos Rivera", "role" to "Frontend Engineer · Plataforma", "email" to "carlos@empresa.com", "status" to "En línea", "isOnline" to false),
-        mapOf("id" to "3", "name" to "Lucía Fernández", "role" to "Community Manager · Marketing", "email" to "lucia@empresa.com", "status" to "Disponible", "isOnline" to false),
-        mapOf("id" to "4", "name" to "Andrés Molina", "role" to "Data Analyst · BI", "email" to "andres@empresa.com", "status" to "Ocupado", "isOnline" to false),
-        mapOf("id" to "5", "name" to "Sofía Torres", "role" to "HR Specialist · Personas", "email" to "sofia@empresa.com", "status" to "Activo", "isOnline" to false)
-    )
+    private val dataSource = MessagesRemoteDataSource()
 
-    private val mockMessages: SnapshotStateList<Map<String, Any>> = mutableStateListOf(
-        mapOf("text" to "Hola, ¿te gustaría ver las piezas nuevas de la colección?", "isMine" to false),
-        mapOf("text" to "Sí, muéstrame las obras destacadas y sus detalles.", "isMine" to true),
-        mapOf("text" to "Claro, aquí tienes una vista tipo chat con perfil y nombres visibles.", "isMine" to false),
-        mapOf("text" to "Perfecto, quiero que se vea elegante y limpio.", "isMine" to true)
-    )
-
-    var uiState by mutableStateOf<MessagesUiState>(
-        MessagesUiState.Success(users = mockUsers, selectedUserId = null, currentChatMessages = mockMessages.toList())
-    )
+    var uiState by mutableStateOf<MessagesUiState>(MessagesUiState.Loading)
         private set
+
+    init {
+        loadUsers()
+    }
+
+    private fun loadUsers() {
+        viewModelScope.launch {
+            try {
+                val remoteUsers = dataSource.getUsers()
+                val users = remoteUsers.map { user ->
+                    MessageUser(
+                        id = user.id,
+                        name = user.username,
+                        role = "",
+                        email = "",
+                        status = com.irozumi.features.messages.domain.model.UserStatus.Activo
+                    )
+                }
+                uiState = MessagesUiState.Success(users = users)
+            } catch (e: Exception) {
+                uiState = MessagesUiState.Success(users = emptyList())
+            }
+        }
+    }
 
     fun selectUser(userId: String?) {
         val currentState = uiState
         if (currentState is MessagesUiState.Success) {
-            uiState = currentState.copy(selectedUserId = userId)
+            uiState = currentState.copy(
+                selectedUserId = userId,
+                currentChatMessages = emptyList()  // Limpiar mensajes al cambiar de chat
+            )
+            if (userId != null) loadMessages(userId)
+        }
+    }
+
+    private fun loadMessages(otherUserId: String) {
+        viewModelScope.launch {
+            try {
+                val remoteMessages = dataSource.getMessages(otherUserId)
+                val messages = remoteMessages.map { msg ->
+                    ChatMessage(
+                        id = msg.id,
+                        senderId = msg.senderId,
+                        text = msg.content,
+                        timestamp = Date(),
+                        isMine = msg.senderId == com.irozumi.core.security.TokenManager.currentUserId
+                    )
+                }
+                val currentState = uiState
+                if (currentState is MessagesUiState.Success) {
+                    uiState = currentState.copy(currentChatMessages = messages)
+                }
+            } catch (e: Exception) {
+            }
         }
     }
 
     fun sendMessage(text: String) {
-        if (text.isNotBlank()) {
-            mockMessages.add(mapOf("text" to text, "isMine" to true))
-            val currentState = uiState
-            if (currentState is MessagesUiState.Success) {
-                uiState = currentState.copy(currentChatMessages = mockMessages.toList())
+        val currentState = uiState
+        if (currentState !is MessagesUiState.Success || currentState.selectedUserId == null) return
+
+        // Agregar a la lista local inmediatamente
+        val newMessage = com.irozumi.features.messages.domain.model.ChatMessage(
+            id = "", senderId = TokenManager.currentUserId, text = text,
+            timestamp = java.util.Date(), isMine = true
+        )
+        val updatedMessages = currentState.currentChatMessages + newMessage
+        uiState = currentState.copy(currentChatMessages = updatedMessages)
+
+        // Enviar al backend en paralelo
+        viewModelScope.launch {
+            try {
+                dataSource.sendMessage(currentState.selectedUserId!!, text)
+            } catch (e: Exception) {
+                // Si falla, quitar el mensaje
+                uiState = currentState
             }
         }
     }

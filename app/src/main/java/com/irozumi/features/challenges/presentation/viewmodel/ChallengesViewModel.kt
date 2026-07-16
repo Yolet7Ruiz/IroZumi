@@ -1,97 +1,90 @@
 package com.irozumi.features.challenges.presentation.viewmodel
 
-import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.irozumi.features.challenges.data.datasource.ChallengesRemoteDataSource
+import com.irozumi.features.challenges.domain.model.Challenge
 import com.irozumi.features.challenges.presentation.screens.ChallengesUiState
-import com.irozumi.features.challenges.domain.model.CustomChallenge
-import com.irozumi.features.challenges.domain.model.ParticipantArtwork
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-
+import com.irozumi.features.challenges.domain.model.ChallengeStatus
 class ChallengesViewModel : ViewModel() {
 
-    private val _uiState = MutableStateFlow<ChallengesUiState>(
-        ChallengesUiState.Success(
-            systemChallenges = emptyList(), // Aquí cargarías tus retos base
-            communityChallenges = emptyList(),
-            participantArtworks = emptyList(),
-            pastWinners = emptyList()
-        )
-    )
+    private val dataSource = ChallengesRemoteDataSource()
+
+    private val _uiState = MutableStateFlow<ChallengesUiState>(ChallengesUiState.Success())
     val uiState: StateFlow<ChallengesUiState> = _uiState.asStateFlow()
 
-    // 💡 Envío de entrega de un participante al reto seleccionado
-    fun submitArtwork(challengeId: String, title: String, category: String, imageUri: Uri?) {
+    init {
+        loadChallenges()
+    }
+
+    private fun loadChallenges() {
         viewModelScope.launch {
-            val currentState = _uiState.value
-            if (currentState is ChallengesUiState.Success) {
-                val newArtwork = ParticipantArtwork(
-                    id = System.currentTimeMillis().toString(),
-                    username = "@UsuarioLogueado",
-                    title = title,
-                    category = category,
-                    imageUri = imageUri,
-                    votes = 0
-                )
-                _uiState.update {
-                    currentState.copy(
-                        participantArtworks = currentState.participantArtworks + newArtwork
+            try {
+                val remote = dataSource.getActiveChallenges()
+                val challenges = remote.map {
+                    Challenge(
+                        id = it.id,
+                        title = it.title,
+                        concept = it.theme ?: "",
+                        description = it.description ?: "",
+                        status = ChallengeStatus.ACTIVO,
+                        endDate = java.text.SimpleDateFormat("yyyy-MM-dd").parse(it.endDate) ?: java.util.Date(),
+                        participantsCount = 0
                     )
                 }
-            }
+                _uiState.update { (it as? ChallengesUiState.Success)?.copy(systemChallenges = challenges) ?: it }
+            } catch (e: Exception) { }
         }
     }
 
-    // 💡 Gestión de votaciones persistente por ID de entrega
-    fun updateVote(artworkId: String, isVoted: Boolean) {
+    fun loadSubmissions(challengeId: String) {
         viewModelScope.launch {
-            val currentState = _uiState.value
-            if (currentState is ChallengesUiState.Success) {
-                val updatedArtworks = currentState.participantArtworks.map { artwork ->
-                    if (artwork.id == artworkId) {
-                        val newVotes = if (isVoted) artwork.votes + 1 else artwork.votes - 1
-                        artwork.copy(votes = newVotes)
-                    } else {
-                        artwork
-                    }
+            try {
+                val remote = dataSource.getSubmissions(challengeId)
+                val artworks = remote.map {
+                    com.irozumi.features.challenges.domain.model.ParticipantArtwork(
+                        id = it.id,
+                        username = it.username,
+                        title = it.title ?: "",
+                        category = it.category ?: "",
+                        imageUri = null,
+                        votes = it.votes
+                    )
                 }
-                _uiState.update { currentState.copy(participantArtworks = updatedArtworks) }
-            }
+                _uiState.update { (it as? ChallengesUiState.Success)?.copy(participantArtworks = artworks) ?: it }
+            } catch (e: Exception) { }
         }
     }
 
-    // 💡 Publicación de una nueva dinámica creada por un miembro de la comunidad
-    fun createNewChallenge(
-        title: String,
-        description: String,
-        date: String,
-        time: String,
-        votingDays: String,
-        imageUri: Uri?
-    ) {
+    fun submitArtwork(challengeId: String, title: String, category: String, imageBase64: String) {
         viewModelScope.launch {
-            val currentState = _uiState.value
-            if (currentState is ChallengesUiState.Success) {
-                val days = votingDays.toIntOrNull() ?: 3
-                val newChallenge = CustomChallenge(
-                    id = System.currentTimeMillis().toString(),
-                    title = title,
-                    description = description,
-                    startDate = date,
-                    startTime = time,
-                    votingDays = days,
-                    referenceImageUri = imageUri
-                )
-                _uiState.update {
-                    currentState.copy(
-                        communityChallenges = currentState.communityChallenges + newChallenge
-                    )
-                }
-            }
+            try {
+                dataSource.submitArtwork(challengeId, title, category, imageBase64)
+                loadSubmissions(challengeId)
+            } catch (e: Exception) { }
+        }
+    }
+
+    fun updateVote(submissionId: String) {
+        viewModelScope.launch {
+            try {
+                dataSource.voteSubmission(submissionId)
+            } catch (e: Exception) { }
+        }
+    }
+
+    fun createNewChallenge(title: String, description: String, date: String, time: String, votingDays: String, imageBase64: String) {
+        viewModelScope.launch {
+            try {
+                dataSource.createChallenge(title, description, date, time, imageBase64, votingDays)
+                loadChallenges()
+            } catch (e: Exception) { }
         }
     }
 }
+

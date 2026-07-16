@@ -86,7 +86,9 @@ fun LoginScreen(
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = brandBlue,
-                        focusedLabelColor = brandBlue
+                        focusedLabelColor = brandBlue,
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black
                     )
                 )
 
@@ -101,7 +103,9 @@ fun LoginScreen(
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = brandBlue,
-                        focusedLabelColor = brandBlue
+                        focusedLabelColor = brandBlue,
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black
                     ),
                     trailingIcon = {
                         IconButton(onClick = { passwordVisible = !passwordVisible }) {
@@ -122,8 +126,6 @@ fun LoginScreen(
                     Button(
                         onClick = {
                             viewModel.onLoginSubmitted()
-                            // Redirección inmediata simulada para desbloquear la vista de desarrollo
-                            onNavigateToHome()
                         },
                         modifier = Modifier
                             .fillMaxWidth()

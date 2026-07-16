@@ -37,11 +37,11 @@ fun UserListScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(vertical = 8.dp)
             ) {
-                items(state.users) { userMap ->
-                    val userId = userMap["id"] as? String ?: ""
-                    val userName = userMap["name"] as? String ?: "User"
-                    val userRole = userMap["role"] as? String ?: ""
-                    val isOnline = userMap["isOnline"] as? Boolean ?: false
+                items(state.users) { user ->
+                    val userId = user.id
+                    val userName = user.name
+                    val userRole = user.role
+                    val isOnline = user.isOnline
 
                     Row(
                         modifier = Modifier

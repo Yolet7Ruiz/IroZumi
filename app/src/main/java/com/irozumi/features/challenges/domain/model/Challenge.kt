@@ -9,7 +9,7 @@ enum class ChallengeStatus {
 }
 
 data class Challenge(
-    val id: Int,
+    val id: String,
     val title: String,          // Ej: "Martes de boceto", "Jueves de reto"
     val concept: String,        // Ej: "Manos en movimiento", "Luz y sombra"
     val description: String,    // Descripción detallada de las reglas

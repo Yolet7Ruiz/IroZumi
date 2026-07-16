@@ -50,8 +50,8 @@ fun ChatDetailScreen(
                     reverseLayout = true
                 ) {
                     items(state.currentChatMessages.reversed()) { message ->
-                        val text = message["text"] as? String ?: ""
-                        val isMine = message["isMine"] as? Boolean ?: false
+                        val text = message.text
+                        val isMine = message.isMine
 
                         Box(
                             modifier = Modifier.fillMaxWidth(),

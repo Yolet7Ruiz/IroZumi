@@ -3,26 +3,41 @@ package com.irozumi.features.profile.presentation.viewmodel
 import android.net.Uri
 
 data class ProfileUiState(
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true,
     val isMyProfile: Boolean = true,
-    val name: String = "Yolet Ruiz",
-    val username: String = "@yolet_art",
-    val bio: String = "Artista conceptual | Amante de las acuarelas tradicionales.",
+    val name: String = "",
+    val username: String = "",
+    val bio: String = "",
     val profilePictureUri: Uri? = null,
     val coverPictureUri: Uri? = null,
-    val instagram: String = "yolet_art_studio",
-    val twitter: String = "yolet_draws",
+    val profilePictureUrl: String = "",
+    val coverPictureUrl: String = "",
+    val instagram: String = "",
+    val twitter: String = "",
     val isFollowing: Boolean = false,
     val posts: List<ProfilePost> = emptyList(),
-    val isEditing: Boolean = false
+    val isEditing: Boolean = false,
+    // NUEVOS CAMPOS PARA COMENTARIOS
+    val activePostForComments: ProfilePost? = null,
+    val comments: List<CommentData> = emptyList(),
+    val isCommentsLoading: Boolean = false,
+    val commentError: String? = null,
+    val fullScreenImage: String? = null
 )
 
 data class ProfilePost(
-    val id: Int,
+    val id: String,
     val title: String,
     val description: String,
     val category: String,
     val likesCount: Int,
     val isLiked: Boolean,
-    val commentsCount: Int
+    val commentsCount: Int,
+    val imageUrl: String = ""
+)
+
+data class CommentData(
+    val id: String,
+    val authorName: String,
+    val text: String
 )

@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -27,28 +28,34 @@ fun NotificationsScreen(
     viewModel: NotificationsViewModel,
     onNavigateToSource: (String) -> Unit
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF4F6F9))
-    ) {
+    val state by viewModel.uiState
+
+    Box(modifier = Modifier.fillMaxSize().background(Color(0xFFF4F6F9))) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(14.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            // 💡 Aquí agregas tus elementos usando los parámetros corregidos de tu diseño
-            item {
+            // Nuevas
+            items(state.newNotifications) { notif ->
                 NotificationCard(
-                    username = "@BandaRomantica24",
-                    actionText = "le gustó tu arte.",
-                    timeAndStatus = "Hace 23h • Nuevo",
-                    onClick = {
-                        // Te redirige a la sección correspondiente al pulsar la barrita
-                        onNavigateToSource("feed")
-                    },
-                    onMuteClick = { /* Vincula tu función del viewModel aquí */ },
-                    onDeleteClick = { /* Vincula tu función del viewModel aquí */ }
+                    username = notif.username,
+                    actionText = notif.actionText,
+                    timeAndStatus = notif.timeAgo,
+                    onClick = { onNavigateToSource(notif.tag) },
+                    onMuteClick = { viewModel.muteNotification(notif.id) }, // CONECTADO
+                    onDeleteClick = { viewModel.deleteNotification(notif.id) } // CONECTADO
+                )
+            }
+            // Recientes
+            items(state.recentNotifications) { notif ->
+                NotificationCard(
+                    username = notif.username,
+                    actionText = notif.actionText,
+                    timeAndStatus = notif.timeAgo,
+                    onClick = { onNavigateToSource(notif.tag) },
+                    onMuteClick = { viewModel.muteNotification(notif.id) }, // CONECTADO
+                    onDeleteClick = { viewModel.deleteNotification(notif.id) } // CONECTADO
                 )
             }
         }
@@ -70,7 +77,7 @@ fun NotificationCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() },
-        shape = RoundedCornerShape(28.dp), // Bordes súper redondeados como en la imagen
+        shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
@@ -80,88 +87,34 @@ fun NotificationCard(
                 .padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-
-            // Foto de perfil circular con mini-icono de corazón naranja abajo a la derecha
-            Box(
-                modifier = Modifier.size(54.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(50.dp)
-                        .align(Alignment.TopStart)
-                        .background(Color(0xFFE0E0E0), CircleShape)
-                )
-                Box(
-                    modifier = Modifier
-                        .size(22.dp)
-                        .background(Color(0xFFFF6B00), CircleShape)
-                        .align(Alignment.BottomEnd)
-                        .background(Color.White, CircleShape)
-                        .padding(2.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Favorite,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(12.dp)
-                    )
+            Box(modifier = Modifier.size(54.dp)) {
+                Box(modifier = Modifier.size(50.dp).align(Alignment.TopStart).background(Color(0xFFE0E0E0), CircleShape))
+                Box(modifier = Modifier.size(22.dp).background(Color(0xFFFF6B00), CircleShape).align(Alignment.BottomEnd).background(Color.White, CircleShape).padding(2.dp), contentAlignment = Alignment.Center) {
+                    Icon(Icons.Default.Favorite, null, tint = Color.White, modifier = Modifier.size(12.dp))
                 }
             }
 
             Spacer(modifier = Modifier.width(14.dp))
 
-            // Textos en un solo bloque fluido (Nombre en negrita + texto continuo)
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = buildAnnotatedString {
-                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, color = Color(0xFF222222))) {
-                            append(username)
-                        }
+                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, color = Color.Black)) { append(username) }
                         append(" ")
-                        withStyle(style = SpanStyle(color = Color(0xFF555555))) {
-                            append(actionText)
-                        }
+                        withStyle(style = SpanStyle(color = Color.DarkGray)) { append(actionText) }
                     },
                     fontSize = 14.sp
                 )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = timeAndStatus,
-                    fontSize = 12.sp,
-                    color = Color.Gray
-                )
+                Text(text = timeAndStatus, fontSize = 12.sp, color = Color.Gray)
             }
 
-            // Tres puntitos con menú desplegable para Silenciar y Eliminar
             Box {
                 IconButton(onClick = { showMenu = true }) {
-                    Icon(
-                        imageVector = Icons.Default.MoreVert,
-                        contentDescription = "Opciones",
-                        tint = Color.Gray
-                    )
+                    Icon(Icons.Default.MoreVert, "Opciones", tint = Color.Gray)
                 }
-                DropdownMenu(
-                    expanded = showMenu,
-                    onDismissRequest = { showMenu = false }
-                ) {
-                    DropdownMenuItem(
-                        text = { Text("Silenciar notificación") },
-                        onClick = {
-                            onMuteClick()
-                            showMenu = false
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("Eliminar", color = Color.Red) },
-                        onClick = {
-                            onDeleteClick()
-                            showMenu = false
-                        }
-                    )
+                DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
+                    DropdownMenuItem(text = { Text("Silenciar notificación") }, onClick = { onMuteClick(); showMenu = false })
+                    DropdownMenuItem(text = { Text("Eliminar", color = Color.Red) }, onClick = { onDeleteClick(); showMenu = false })
                 }
             }
         }
